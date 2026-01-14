@@ -41,6 +41,48 @@ opacity:0 !important;
 pointer-events:none !important;
 }
 
+/* AUTH */
+.auth-container{
+max-width:380px;
+margin:80px auto;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+}
+.auth-tabs{
+display:flex;
+gap:10px;
+margin-bottom:16px;
+}
+.auth-tabs button{
+flex:1;
+background:none;
+border:1px solid var(--border);
+color:var(--text);
+}
+.auth-tabs button.active{
+background:var(--gradient);
+color:#022c22;
+font-weight:700;
+}
+
+input,button{
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:12px;
+border:1px solid var(--border);
+background:transparent;
+color:var(--text);
+}
+button{
+background:var(--gradient);
+border:none;
+font-weight:700;
+color:#022c22;
+}
+
 /* HEADER */
 .header{
 display:flex;
@@ -81,40 +123,6 @@ border-radius:16px;
 padding:16px;
 margin:16px;
 }
-
-input,button{
-width:100%;
-padding:12px;
-margin-top:8px;
-border-radius:12px;
-border:1px solid var(--border);
-background:transparent;
-color:var(--text);
-}
-button{
-background:var(--gradient);
-border:none;
-font-weight:700;
-color:#022c22;
-}
-
-/* POPUP */
-.overlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.6);
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:30;
-}
-.popup{
-background:var(--card);
-border-radius:18px;
-padding:20px;
-width:90%;
-max-width:360px;
-}
 </style>
 </head>
 
@@ -134,19 +142,25 @@ max-width:360px;
 <div class="logo">FINANÇAS EM DIA</div>
 </div>
 
-<!-- LOGIN -->
-<div id="loginCard" class="card">
+<!-- LOGIN / CADASTRO -->
+<div id="auth" class="auth-container">
+<div class="auth-tabs">
+<button id="tabLogin" class="active" onclick="showLogin()">Entrar</button>
+<button id="tabRegister" onclick="showRegister()">Criar conta</button>
+</div>
+
+<div id="loginForm">
 <input id="loginUser" placeholder="Usuário">
 <input id="loginPass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
 
-<!-- POPUP PRIMEIRO LOGIN -->
-<div id="firstPopup" class="overlay hidden">
-<div class="popup">
-<h3>Bem-vindo!</h3>
-<p>Vamos configurar seu app?</p>
-<button onclick="closeFirstPopup()">Começar</button>
+<div id="registerForm" class="hidden">
+<input id="regName" placeholder="Nome completo">
+<input id="regUser" placeholder="Usuário">
+<input id="regEmail" placeholder="Email">
+<input id="regPass" type="password" placeholder="Senha">
+<button onclick="register()">Cadastrar</button>
 </div>
 </div>
 
@@ -161,189 +175,132 @@ max-width:360px;
 <!-- PERFIL -->
 <div id="profile" class="hidden card">
 <h3>Perfil</h3>
-<input type="file">
 <input id="profilePhone" placeholder="Telefone">
 <input id="profilePass" type="password" placeholder="Nova senha">
 <button onclick="saveProfile()">Salvar</button>
 </div>
 
-<!-- CONFIGURAÇÕES -->
+<!-- CONFIG -->
 <div id="settings" class="hidden card">
 <h3>Configurações</h3>
 <button onclick="toggleTheme()">Alternar tema</button>
-
-<label>
-<input type="checkbox" id="showCharts" checked onchange="saveSettings()">
- Mostrar gráficos
-</label>
-
-<label>
-<input type="checkbox" id="showDebts" checked onchange="saveSettings()">
- Mostrar dívidas
-</label>
+<label><input type="checkbox" id="showCharts" checked onchange="saveSettings()"> Mostrar gráficos</label>
 </div>
 
 <!-- DÍVIDAS -->
 <div id="debts" class="hidden card">
 <h3>Dívidas</h3>
-
 <input id="dName" placeholder="Nome da dívida">
-<input id="dValue" type="number" placeholder="Valor total">
+<input id="dValue" type="number" placeholder="Valor">
 <button onclick="addDebt()">Adicionar</button>
-
 <div id="debtList"></div>
 </div>
 
 <script>
-/* ===== STATE ===== */
-let users = JSON.parse(localStorage.getItem("users")) || [
-  {user:"teste",pass:"123",firstLogin:true,debts:[],settings:{}}
-];
+let users = JSON.parse(localStorage.getItem("users")) || [];
 let currentUser=null;
-let isAuthenticated=false;
 
-/* ===== INIT ===== */
-function initApp(){
-  header.classList.add("hidden");
-  menu.classList.add("hidden");
-  firstPopup.classList.add("hidden");
-  dashboard.classList.add("hidden");
-  profile.classList.add("hidden");
-  settings.classList.add("hidden");
-  debts.classList.add("hidden");
-
-  loginCard.classList.remove("hidden");
-
-  isAuthenticated=false;
-  currentUser=null;
+/* AUTH UI */
+function showLogin(){
+tabLogin.classList.add("active");
+tabRegister.classList.remove("active");
+loginForm.classList.remove("hidden");
+registerForm.classList.add("hidden");
 }
-initApp();
+function showRegister(){
+tabRegister.classList.add("active");
+tabLogin.classList.remove("active");
+registerForm.classList.remove("hidden");
+loginForm.classList.add("hidden");
+}
 
-/* ===== AUTH ===== */
+/* REGISTER */
+function register(){
+if(!regName.value||!regUser.value||!regEmail.value||!regPass.value)
+return alert("Preencha tudo");
+
+users.push({
+name:regName.value,
+user:regUser.value,
+email:regEmail.value,
+pass:regPass.value,
+debts:[],
+settings:{}
+});
+localStorage.setItem("users",JSON.stringify(users));
+alert("Conta criada!");
+showLogin();
+}
+
+/* LOGIN */
 function login(){
-  const u=users.find(u=>u.user===loginUser.value && u.pass===loginPass.value);
-  if(!u)return alert("Login inválido");
+const u=users.find(u=>u.user===loginUser.value && u.pass===loginPass.value);
+if(!u)return alert("Login inválido");
 
-  currentUser=u;
-  isAuthenticated=true;
-
-  loginCard.classList.add("hidden");
-  header.classList.remove("hidden");
-  menu.classList.remove("hidden");
-
-  applySettings();
-
-  if(u.firstLogin){
-    firstPopup.classList.remove("hidden");
-  }else{
-    openDashboard();
-  }
+currentUser=u;
+auth.classList.add("hidden");
+header.classList.remove("hidden");
+menu.classList.remove("hidden");
+dashboard.classList.remove("hidden");
+renderChart();
 }
 
-function closeFirstPopup(){
-  currentUser.firstLogin=false;
-  saveUsers();
-  firstPopup.classList.add("hidden");
-  openDashboard();
-}
-
-function logout(){
-  initApp();
-}
-
-/* ===== UI ===== */
-function toggleMenu(){
-  if(!isAuthenticated)return;
-  menu.classList.toggle("open");
-}
-
+/* MENU */
+function toggleMenu(){menu.classList.toggle("open")}
 function openSection(id){
-  dashboard.classList.add("hidden");
-  profile.classList.add("hidden");
-  settings.classList.add("hidden");
-  debts.classList.add("hidden");
-
-  document.getElementById(id).classList.remove("hidden");
-  menu.classList.remove("open");
+dashboard.classList.add("hidden");
+profile.classList.add("hidden");
+settings.classList.add("hidden");
+debts.classList.add("hidden");
+document.getElementById(id).classList.remove("hidden");
+menu.classList.remove("open");
 }
+function logout(){location.reload()}
 
-function openDashboard(){
-  dashboard.classList.remove("hidden");
-  renderChart();
-}
-
-/* ===== PROFILE ===== */
+/* PROFILE */
 function saveProfile(){
-  if(profilePass.value)currentUser.pass=profilePass.value;
-  currentUser.phone=profilePhone.value;
-  saveUsers();
-  alert("Perfil atualizado");
+if(profilePass.value)currentUser.pass=profilePass.value;
+currentUser.phone=profilePhone.value;
+save();
+alert("Perfil salvo");
 }
 
-/* ===== SETTINGS ===== */
+/* SETTINGS */
+function toggleTheme(){document.body.classList.toggle("light")}
 function saveSettings(){
-  currentUser.settings={
-    showCharts:showCharts.checked,
-    showDebts:showDebts.checked
-  };
-  saveUsers();
-  applySettings();
+currentUser.settings={showCharts:showCharts.checked};
+save();
+chartSection.style.display=showCharts.checked?"block":"none";
 }
 
-function applySettings(){
-  const s=currentUser.settings||{};
-  chartSection.style.display=s.showCharts===false?"none":"block";
-  debts.style.display=s.showDebts===false?"none":"block";
-}
-
-function toggleTheme(){
-  document.body.classList.toggle("light");
-}
-
-/* ===== DÍVIDAS ===== */
+/* DÍVIDAS */
 function addDebt(){
-  if(!dName.value||!dValue.value)return;
-  currentUser.debts.push({name:dName.value,value:+dValue.value});
-  dName.value="";dValue.value="";
-  saveUsers();
-  renderDebts();
+currentUser.debts.push({name:dName.value,value:+dValue.value});
+dName.value="";dValue.value="";
+save();renderDebts();renderChart();
 }
-
 function renderDebts(){
-  debtList.innerHTML="";
-  currentUser.debts.forEach((d,i)=>{
-    debtList.innerHTML+=`
-      <div style="margin-top:8px">
-        ${d.name} - R$ ${d.value.toFixed(2)}
-        <button onclick="removeDebt(${i})">X</button>
-      </div>`;
-  });
+debtList.innerHTML="";
+currentUser.debts.forEach((d,i)=>{
+debtList.innerHTML+=`${d.name} - R$ ${d.value} <button onclick="removeDebt(${i})">X</button><br>`;
+});
 }
-
 function removeDebt(i){
-  currentUser.debts.splice(i,1);
-  saveUsers();
-  renderDebts();
+currentUser.debts.splice(i,1);
+save();renderDebts();renderChart();
 }
 
-/* ===== CHART ===== */
+/* CHART */
 function renderChart(){
-  if(!currentUser.debts)return;
-  let total=0;
-  currentUser.debts.forEach(d=>total+=d.value);
-
-  new Chart(chart,{
-    type:"doughnut",
-    data:{
-      labels:["Total em dívidas"],
-      datasets:[{data:[total]}]
-    }
-  });
+if(!currentUser.debts)return;
+let total=0;
+currentUser.debts.forEach(d=>total+=d.value);
+new Chart(chart,{type:"doughnut",data:{labels:["Dívidas"],datasets:[{data:[total]}]}});
 }
 
-/* ===== STORAGE ===== */
-function saveUsers(){
-  localStorage.setItem("users",JSON.stringify(users));
+/* STORAGE */
+function save(){
+localStorage.setItem("users",JSON.stringify(users));
 }
 </script>
 </body>
