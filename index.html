@@ -1,175 +1,206 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>FINANÇAS EM DIA</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      margin: 0;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FINANÇAS EM DIA</title>
 
-    h1 {
-      text-align: center;
-      color: #22c55e;
-    }
+<style>
+:root {
+  --bg: #020617;
+  --card: #020617;
+  --border: #1e293b;
+  --text: #e5e7eb;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #facc15;
+  --blue: #38bdf8;
+}
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #020617;
-      padding: 20px;
-      border-radius: 10px;
-    }
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
 
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-    }
+body {
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 16px;
+}
 
-    input {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-    }
+h1 {
+  text-align: center;
+  color: var(--green);
+  margin-bottom: 16px;
+}
 
-    button {
-      cursor: pointer;
-    }
+.container {
+  max-width: 480px;
+  margin: auto;
+}
 
-    .add {
-      background: #22c55e;
-      color: #022c22;
-      font-weight: bold;
-    }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
 
-    .debt {
-      background: #020617;
-      border: 1px solid #334155;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+}
 
-    .paid {
-      text-decoration: line-through;
-      opacity: 0.5;
-    }
+button {
+  background: var(--green);
+  color: #022c22;
+  font-weight: bold;
+  border: none;
+}
 
-    .actions button {
-      margin-left: 5px;
-      width: auto;
-    }
+.debt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-    .pay {
-      background: #38bdf8;
-      color: #020617;
-    }
+.badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  width: fit-content;
+}
 
-    .remove {
-      background: #ef4444;
-      color: white;
-    }
-  </style>
+.paid { background: var(--green); color: #022c22; }
+.late { background: var(--red); }
+.warning { background: var(--yellow); color: #422006; }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.actions button {
+  flex: 1;
+  background: var(--blue);
+  color: #020617;
+}
+
+.remove {
+  background: var(--red) !important;
+  color: white !important;
+}
+
+.line {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>FINANÇAS EM DIA</h1>
+<h1>FINANÇAS EM DIA</h1>
 
-  <div class="container">
-    <input type="text" id="name" placeholder="Nome da dívida">
-    <input type="number" id="value" placeholder="Valor (R$)">
-    <button class="add" onclick="addDebt()">Adicionar Dívida</button>
+<div class="container">
 
-    <div id="list"></div>
+  <!-- ADD -->
+  <div class="card">
+    <input id="name" placeholder="Nome da dívida">
+    <input id="value" type="number" placeholder="Valor (R$)">
+    <input id="date" type="date">
+    <button onclick="addDebt()">Adicionar</button>
   </div>
 
-  <script>
-    let debts = JSON.parse(localStorage.getItem("debts")) || [];
+  <!-- LIST -->
+  <div id="list"></div>
 
-    function save() {
-      localStorage.setItem("debts", JSON.stringify(debts));
-      render();
-    }
+</div>
 
-    function addDebt() {
-      const name = document.getElementById("name").value;
-      const value = document.getElementById("value").value;
+<script>
+let debts = JSON.parse(localStorage.getItem("debts")) || [];
 
-      if (!name || !value) {
-        alert("Preencha todos os campos");
-        return;
-      }
+function save() {
+  localStorage.setItem("debts", JSON.stringify(debts));
+  render();
+}
 
-      debts.push({
-        name,
-        value,
-        paid: false
-      });
+function addDebt() {
+  const name = nameInput.value;
+  const value = valueInput.value;
+  const date = dateInput.value;
 
-      document.getElementById("name").value = "";
-      document.getElementById("value").value = "";
+  if (!name || !value || !date) {
+    alert("Preencha todos os campos");
+    return;
+  }
 
-      save();
-    }
+  debts.push({ name, value, date, paid: false });
+  nameInput.value = valueInput.value = dateInput.value = "";
+  save();
+}
 
-    function payDebt(index) {
-      debts[index].paid = !debts[index].paid;
-      save();
-    }
+function togglePaid(i) {
+  debts[i].paid = !debts[i].paid;
+  save();
+}
 
-    function removeDebt(index) {
-      debts.splice(index, 1);
-      save();
-    }
+function removeDebt(i) {
+  debts.splice(i, 1);
+  save();
+}
 
-    function render() {
-      const list = document.getElementById("list");
-      list.innerHTML = "";
+function status(debt) {
+  if (debt.paid) return "paid";
 
-      debts.forEach((debt, index) => {
-        const div = document.createElement("div");
-        div.className = "debt";
+  const today = new Date();
+  const due = new Date(debt.date);
+  const diff = (due - today) / (1000 * 60 * 60 * 24);
 
-        const info = document.createElement("div");
-        info.className = debt.paid ? "paid" : "";
-        info.innerHTML = `<strong>${debt.name}</strong><br>R$ ${debt.value}`;
+  if (diff < 0) return "late";
+  if (diff <= 3) return "warning";
+  return "";
+}
 
-        const actions = document.createElement("div");
-        actions.className = "actions";
+function render() {
+  list.innerHTML = "";
 
-        const payBtn = document.createElement("button");
-        payBtn.className = "pay";
-        payBtn.innerText = debt.paid ? "Desfazer" : "Pagar";
-        payBtn.onclick = () => payDebt(index);
+  debts.forEach((d, i) => {
+    const s = status(d);
 
-        const removeBtn = document.createElement("button");
-        removeBtn.className = "remove";
-        removeBtn.innerText = "Remover";
-        removeBtn.onclick = () => removeDebt(index);
+    list.innerHTML += `
+      <div class="card debt ${d.paid ? "line" : ""}">
+        <strong>${d.name}</strong>
+        <span>R$ ${d.value}</span>
+        <span>Vencimento: ${new Date(d.date).toLocaleDateString()}</span>
+        ${s ? `<span class="badge ${s}">
+          ${s === "paid" ? "PAGA" : s === "late" ? "ATRASADA" : "VENCE EM BREVE"}
+        </span>` : ""}
+        <div class="actions">
+          <button onclick="togglePaid(${i})">${d.paid ? "Desfazer" : "Pagar"}</button>
+          <button class="remove" onclick="removeDebt(${i})">Remover</button>
+        </div>
+      </div>
+    `;
+  });
+}
 
-        actions.appendChild(payBtn);
-        actions.appendChild(removeBtn);
+const nameInput = document.getElementById("name");
+const valueInput = document.getElementById("value");
+const dateInput = document.getElementById("date");
+const list = document.getElementById("list");
 
-        div.appendChild(info);
-        div.appendChild(actions);
-
-        list.appendChild(div);
-      });
-    }
-
-    render();
-  </script>
+render();
+</script>
 
 </body>
 </html>
