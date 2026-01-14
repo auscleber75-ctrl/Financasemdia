@@ -15,7 +15,6 @@
 --border:#1e293b;
 --text:#e5e7eb;
 --muted:#94a3b8;
---accent:#22c55e;
 --gradient:linear-gradient(135deg,#22c55e,#38bdf8);
 }
 .light{
@@ -27,24 +26,28 @@
 }
 
 *{box-sizing:border-box;font-family:Inter,sans-serif}
+
 body{
-margin:0;background:var(--bg);color:var(--text);
+margin:0;
+background:var(--bg);
+color:var(--text);
 min-height:100vh;
 }
 
-.hidden{display:none}
+.hidden{
+display:none !important;
+visibility:hidden !important;
+opacity:0 !important;
+pointer-events:none !important;
+}
 
 /* HEADER */
 .header{
 display:flex;
-align-items:center;
 justify-content:space-between;
+align-items:center;
 padding:14px;
 border-bottom:1px solid var(--border);
-}
-.menu-btn{
-font-size:22px;
-cursor:pointer;
 }
 .logo{
 font-weight:800;
@@ -52,13 +55,14 @@ background:var(--gradient);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
+.menu-btn{font-size:22px;cursor:pointer}
 
 /* MENU */
 .menu{
 position:fixed;
 top:0;left:0;
-height:100%;
 width:260px;
+height:100%;
 background:var(--card);
 border-right:1px solid var(--border);
 padding:16px;
@@ -67,10 +71,7 @@ transition:.3s;
 z-index:20;
 }
 .menu.open{transform:translateX(0)}
-.menu button{
-width:100%;
-margin-bottom:10px;
-}
+.menu button{width:100%;margin-bottom:10px}
 
 /* CARDS */
 .card{
@@ -120,23 +121,22 @@ max-width:360px;
 <body>
 
 <!-- MENU -->
-<div id="menu" class="menu">
+<div id="menu" class="menu hidden">
 <button onclick="openSection('profile')">Perfil</button>
 <button onclick="openSection('settings')">Configurações</button>
-<button onclick="openSection('status')">Status</button>
-<button onclick="openSection('support')">Suporte</button>
+<button onclick="openSection('debts')">Gerir Dívidas</button>
 <button onclick="logout()">Sair</button>
 </div>
 
 <!-- HEADER -->
-<div class="header hidden" id="header">
+<div id="header" class="header hidden">
 <div class="menu-btn" onclick="toggleMenu()">☰</div>
 <div class="logo">FINANÇAS EM DIA</div>
 </div>
 
 <!-- LOGIN -->
 <div id="loginCard" class="card">
-<input id="loginUser" placeholder="Usuário ou Email">
+<input id="loginUser" placeholder="Usuário">
 <input id="loginPass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
@@ -152,52 +152,86 @@ max-width:360px;
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
-<div class="card">Dashboard carregado com sucesso 🎉</div>
+<div id="chartSection" class="card">
+<h3>Resumo</h3>
+<canvas id="chart"></canvas>
+</div>
 </div>
 
 <!-- PERFIL -->
 <div id="profile" class="hidden card">
 <h3>Perfil</h3>
 <input type="file">
-<input placeholder="Telefone">
-<input type="password" placeholder="Nova senha">
-<button>Salvar</button>
+<input id="profilePhone" placeholder="Telefone">
+<input id="profilePass" type="password" placeholder="Nova senha">
+<button onclick="saveProfile()">Salvar</button>
 </div>
 
-<!-- CONFIG -->
+<!-- CONFIGURAÇÕES -->
 <div id="settings" class="hidden card">
 <h3>Configurações</h3>
 <button onclick="toggleTheme()">Alternar tema</button>
-<label><input type="checkbox" checked> Mostrar gráficos</label>
-<label><input type="checkbox" checked> Mostrar dívidas</label>
+
+<label>
+<input type="checkbox" id="showCharts" checked onchange="saveSettings()">
+ Mostrar gráficos
+</label>
+
+<label>
+<input type="checkbox" id="showDebts" checked onchange="saveSettings()">
+ Mostrar dívidas
+</label>
+</div>
+
+<!-- DÍVIDAS -->
+<div id="debts" class="hidden card">
+<h3>Dívidas</h3>
+
+<input id="dName" placeholder="Nome da dívida">
+<input id="dValue" type="number" placeholder="Valor total">
+<button onclick="addDebt()">Adicionar</button>
+
+<div id="debtList"></div>
 </div>
 
 <script>
-/* ===== ESTADO GLOBAL ===== */
+/* ===== STATE ===== */
 let users = JSON.parse(localStorage.getItem("users")) || [
-  {user:"teste",pass:"123",firstLogin:true}
+  {user:"teste",pass:"123",firstLogin:true,debts:[],settings:{}}
 ];
-let currentUser = null;
-let isAuthenticated = false;
+let currentUser=null;
+let isAuthenticated=false;
 
 /* ===== INIT ===== */
 function initApp(){
-  loginCard.classList.remove("hidden");
   header.classList.add("hidden");
+  menu.classList.add("hidden");
+  firstPopup.classList.add("hidden");
   dashboard.classList.add("hidden");
+  profile.classList.add("hidden");
+  settings.classList.add("hidden");
+  debts.classList.add("hidden");
+
+  loginCard.classList.remove("hidden");
+
+  isAuthenticated=false;
+  currentUser=null;
 }
 initApp();
 
 /* ===== AUTH ===== */
 function login(){
-  const u = users.find(u=>u.user===loginUser.value && u.pass===loginPass.value);
-  if(!u) return alert("Login inválido");
+  const u=users.find(u=>u.user===loginUser.value && u.pass===loginPass.value);
+  if(!u)return alert("Login inválido");
 
-  currentUser = u;
-  isAuthenticated = true;
+  currentUser=u;
+  isAuthenticated=true;
 
   loginCard.classList.add("hidden");
   header.classList.remove("hidden");
+  menu.classList.remove("hidden");
+
+  applySettings();
 
   if(u.firstLogin){
     firstPopup.classList.remove("hidden");
@@ -207,37 +241,109 @@ function login(){
 }
 
 function closeFirstPopup(){
-  currentUser.firstLogin = false;
-  localStorage.setItem("users",JSON.stringify(users));
+  currentUser.firstLogin=false;
+  saveUsers();
   firstPopup.classList.add("hidden");
   openDashboard();
 }
 
 function logout(){
-  isAuthenticated = false;
-  currentUser = null;
-  menu.classList.remove("open");
   initApp();
 }
 
 /* ===== UI ===== */
-function openDashboard(){
-  dashboard.classList.remove("hidden");
-}
-
 function toggleMenu(){
-  if(!isAuthenticated) return;
+  if(!isAuthenticated)return;
   menu.classList.toggle("open");
 }
 
 function openSection(id){
-  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  dashboard.classList.add("hidden");
+  profile.classList.add("hidden");
+  settings.classList.add("hidden");
+  debts.classList.add("hidden");
+
   document.getElementById(id).classList.remove("hidden");
   menu.classList.remove("open");
 }
 
+function openDashboard(){
+  dashboard.classList.remove("hidden");
+  renderChart();
+}
+
+/* ===== PROFILE ===== */
+function saveProfile(){
+  if(profilePass.value)currentUser.pass=profilePass.value;
+  currentUser.phone=profilePhone.value;
+  saveUsers();
+  alert("Perfil atualizado");
+}
+
+/* ===== SETTINGS ===== */
+function saveSettings(){
+  currentUser.settings={
+    showCharts:showCharts.checked,
+    showDebts:showDebts.checked
+  };
+  saveUsers();
+  applySettings();
+}
+
+function applySettings(){
+  const s=currentUser.settings||{};
+  chartSection.style.display=s.showCharts===false?"none":"block";
+  debts.style.display=s.showDebts===false?"none":"block";
+}
+
 function toggleTheme(){
   document.body.classList.toggle("light");
+}
+
+/* ===== DÍVIDAS ===== */
+function addDebt(){
+  if(!dName.value||!dValue.value)return;
+  currentUser.debts.push({name:dName.value,value:+dValue.value});
+  dName.value="";dValue.value="";
+  saveUsers();
+  renderDebts();
+}
+
+function renderDebts(){
+  debtList.innerHTML="";
+  currentUser.debts.forEach((d,i)=>{
+    debtList.innerHTML+=`
+      <div style="margin-top:8px">
+        ${d.name} - R$ ${d.value.toFixed(2)}
+        <button onclick="removeDebt(${i})">X</button>
+      </div>`;
+  });
+}
+
+function removeDebt(i){
+  currentUser.debts.splice(i,1);
+  saveUsers();
+  renderDebts();
+}
+
+/* ===== CHART ===== */
+function renderChart(){
+  if(!currentUser.debts)return;
+  let total=0;
+  currentUser.debts.forEach(d=>total+=d.value);
+
+  new Chart(chart,{
+    type:"doughnut",
+    data:{
+      labels:["Total em dívidas"],
+      datasets:[{data:[total]}]
+    }
+  });
+}
+
+/* ===== STORAGE ===== */
+function saveUsers(){
+  localStorage.setItem("users",JSON.stringify(users));
 }
 </script>
 </body>
