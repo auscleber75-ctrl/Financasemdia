@@ -15,6 +15,7 @@
 --border:#1e293b;
 --text:#e5e7eb;
 --muted:#94a3b8;
+--accent:#22c55e;
 --gradient:linear-gradient(135deg,#22c55e,#38bdf8);
 }
 .light{
@@ -24,274 +25,219 @@
 --text:#020617;
 --muted:#475569;
 }
+
 *{box-sizing:border-box;font-family:Inter,sans-serif}
 body{
 margin:0;background:var(--bg);color:var(--text);
-min-height:100vh;display:flex;justify-content:center;
-padding:16px;
+min-height:100vh;
 }
-.app{width:100%;max-width:420px}
+
 .hidden{display:none}
 
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:14px;
+border-bottom:1px solid var(--border);
+}
+.menu-btn{
+font-size:22px;
+cursor:pointer;
+}
 .logo{
-text-align:center;font-size:28px;font-weight:800;
+font-weight:800;
 background:var(--gradient);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
-margin-bottom:12px;
 }
 
+/* MENU */
+.menu{
+position:fixed;
+top:0;left:0;
+height:100%;
+width:260px;
+background:var(--card);
+border-right:1px solid var(--border);
+padding:16px;
+transform:translateX(-100%);
+transition:.3s;
+z-index:20;
+}
+.menu.open{transform:translateX(0)}
+.menu button{
+width:100%;
+margin-bottom:10px;
+}
+
+/* CARDS */
 .card{
 background:var(--card);
 border:1px solid var(--border);
-border-radius:18px;
-padding:18px;
-margin-bottom:14px;
+border-radius:16px;
+padding:16px;
+margin:16px;
 }
 
-label{font-size:12px;color:var(--muted)}
-input,textarea,button{
-width:100%;padding:12px;margin-top:6px;
-border-radius:12px;border:1px solid var(--border);
-background:transparent;color:var(--text);
+input,button{
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:12px;
+border:1px solid var(--border);
+background:transparent;
+color:var(--text);
 }
-textarea{resize:none}
 button{
 background:var(--gradient);
-border:none;font-weight:700;color:#022c22;
+border:none;
+font-weight:700;
+color:#022c22;
 }
-
-.link{text-align:center;color:#38bdf8;cursor:pointer;margin-top:10px}
 
 /* POPUP */
 .overlay{
-position:fixed;inset:0;
+position:fixed;
+inset:0;
 background:rgba(0,0,0,.6);
-display:flex;align-items:center;justify-content:center;
-z-index:10;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:30;
 }
 .popup{
 background:var(--card);
-border:1px solid var(--border);
 border-radius:18px;
-padding:18px;
-width:92%;max-width:380px;
-max-height:90vh;
-overflow:auto;
+padding:20px;
+width:90%;
+max-width:360px;
 }
 </style>
 </head>
 
 <body>
-<div class="app">
 
+<!-- MENU -->
+<div id="menu" class="menu">
+<button onclick="openSection('profile')">Perfil</button>
+<button onclick="openSection('settings')">Configurações</button>
+<button onclick="openSection('status')">Status</button>
+<button onclick="openSection('support')">Suporte</button>
+<button onclick="logout()">Sair</button>
+</div>
+
+<!-- HEADER -->
+<div class="header hidden" id="header">
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
 <div class="logo">FINANÇAS EM DIA</div>
+</div>
 
 <!-- LOGIN -->
 <div id="loginCard" class="card">
-<label>Usuário ou Email</label>
-<input id="loginUser">
-<label>Senha</label>
-<input id="loginPass" type="password">
+<input id="loginUser" placeholder="Usuário ou Email">
+<input id="loginPass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
-<div class="link" onclick="showRegister()">Criar conta</div>
-</div>
-
-<!-- CADASTRO -->
-<div id="registerCard" class="card hidden">
-<label>Nome completo</label>
-<input id="regName">
-<label>Usuário</label>
-<input id="regUser">
-<label>Email</label>
-<input id="regEmail">
-<label>Senha</label>
-<input id="regPass" type="password">
-<button onclick="register()">Cadastrar</button>
-<div class="link" onclick="showLogin()">Voltar</div>
 </div>
 
 <!-- POPUP PRIMEIRO LOGIN -->
-<div id="setupPopup" class="overlay hidden">
+<div id="firstPopup" class="overlay hidden">
 <div class="popup">
-<h2>Personalizar App</h2>
-
-<label>Nome da dívida</label>
-<input id="dName">
-
-<label>Valor total</label>
-<input id="dTotal" type="number">
-
-<label>Nº de parcelas</label>
-<input id="dParc" type="number">
-
-<label>Valor da parcela</label>
-<input id="dParcValue" disabled>
-
-<label>Prazo (meses)</label>
-<input id="dPrazo" type="number">
-
-<label>Data do vencimento</label>
-<input id="dVenc" type="date">
-
-<label>Observações</label>
-<textarea id="dObs"></textarea>
-
-<button onclick="saveInitialDebt()">Salvar dívida</button>
-<button onclick="finishSetup()">Concluir</button>
+<h3>Bem-vindo!</h3>
+<p>Vamos configurar seu app?</p>
+<button onclick="closeFirstPopup()">Começar</button>
 </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
-<div class="card">
-<h2 id="welcome"></h2>
-<canvas id="chart"></canvas>
+<div class="card">Dashboard carregado com sucesso 🎉</div>
 </div>
 
-<div class="card">
-<h2>Assistente Financeiro 🤖</h2>
-<input id="iaQuestion" placeholder="Ex: Vou conseguir pagar tudo?">
-<button onclick="askIA()">Perguntar</button>
-<div id="iaAnswer" style="margin-top:10px;color:var(--muted)"></div>
-</div>
+<!-- PERFIL -->
+<div id="profile" class="hidden card">
+<h3>Perfil</h3>
+<input type="file">
+<input placeholder="Telefone">
+<input type="password" placeholder="Nova senha">
+<button>Salvar</button>
 </div>
 
+<!-- CONFIG -->
+<div id="settings" class="hidden card">
+<h3>Configurações</h3>
+<button onclick="toggleTheme()">Alternar tema</button>
+<label><input type="checkbox" checked> Mostrar gráficos</label>
+<label><input type="checkbox" checked> Mostrar dívidas</label>
 </div>
 
 <script>
-/* ================= CONFIG OPENAI ================= */
-const OPENAI_API_KEY = "SUA_CHAVE_AQUI";
+/* ===== ESTADO GLOBAL ===== */
+let users = JSON.parse(localStorage.getItem("users")) || [
+  {user:"teste",pass:"123",firstLogin:true}
+];
+let currentUser = null;
+let isAuthenticated = false;
 
-/* ================= STATE ================= */
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let current = null;
-
-/* ================= UI ================= */
-function showRegister(){
-loginCard.classList.add("hidden");
-registerCard.classList.remove("hidden");
+/* ===== INIT ===== */
+function initApp(){
+  loginCard.classList.remove("hidden");
+  header.classList.add("hidden");
+  dashboard.classList.add("hidden");
 }
-function showLogin(){
-registerCard.classList.add("hidden");
-loginCard.classList.remove("hidden");
-}
+initApp();
 
-/* ================= AUTH ================= */
-function register(){
-if(!regName.value||!regUser.value||!regEmail.value||!regPass.value)
-return alert("Preencha tudo");
-
-if(users.find(u=>u.user===regUser.value||u.email===regEmail.value))
-return alert("Usuário já existe");
-
-users.push({
-name:regName.value,
-user:regUser.value,
-email:regEmail.value,
-pass:regPass.value,
-firstLogin:true,
-debts:[]
-});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Conta criada!");
-showLogin();
-}
-
+/* ===== AUTH ===== */
 function login(){
-const u=users.find(u=>
-(u.user===loginUser.value||u.email===loginUser.value)&&
-u.pass===loginPass.value
-);
-if(!u)return alert("Login inválido");
+  const u = users.find(u=>u.user===loginUser.value && u.pass===loginPass.value);
+  if(!u) return alert("Login inválido");
 
-current=u;
-loginCard.classList.add("hidden");
-registerCard.classList.add("hidden");
+  currentUser = u;
+  isAuthenticated = true;
 
-if(u.firstLogin){
-setupPopup.classList.remove("hidden");
-}else{
-openDashboard();
-}
-}
+  loginCard.classList.add("hidden");
+  header.classList.remove("hidden");
 
-/* ================= SETUP ================= */
-dParc.oninput=()=>{
-dParcValue.value = dParc.value && dTotal.value
-? (dTotal.value / dParc.value).toFixed(2)
-: "";
-};
-
-function saveInitialDebt(){
-if(!dName.value||!dTotal.value||!dParc.value) return;
-
-current.debts.push({
-name:dName.value,
-total:+dTotal.value,
-parcelas:+dParc.value,
-parcela:+dParcValue.value,
-prazo:+dPrazo.value,
-vencimento:dVenc.value,
-obs:dObs.value
-});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Dívida adicionada!");
+  if(u.firstLogin){
+    firstPopup.classList.remove("hidden");
+  }else{
+    openDashboard();
+  }
 }
 
-function finishSetup(){
-current.firstLogin=false;
-localStorage.setItem("users",JSON.stringify(users));
-setupPopup.classList.add("hidden");
-openDashboard();
+function closeFirstPopup(){
+  currentUser.firstLogin = false;
+  localStorage.setItem("users",JSON.stringify(users));
+  firstPopup.classList.add("hidden");
+  openDashboard();
 }
 
-/* ================= DASH ================= */
+function logout(){
+  isAuthenticated = false;
+  currentUser = null;
+  menu.classList.remove("open");
+  initApp();
+}
+
+/* ===== UI ===== */
 function openDashboard(){
-dashboard.classList.remove("hidden");
-welcome.innerText=`Bem-vindo(a), ${current.name.split(" ")[0]}!`;
-renderChart();
+  dashboard.classList.remove("hidden");
 }
 
-function renderChart(){
-let total=0;
-current.debts.forEach(d=>total+=d.total);
-new Chart(chart,{
-type:"doughnut",
-data:{
-labels:["Dívidas"],
-datasets:[{data:[total],backgroundColor:["#22c55e"]}]
-}
-});
+function toggleMenu(){
+  if(!isAuthenticated) return;
+  menu.classList.toggle("open");
 }
 
-/* ================= IA OPENAI ================= */
-async function askIA(){
-iaAnswer.innerText="Analisando...";
-let total=0;
-current.debts.forEach(d=>total+=d.total);
+function openSection(id){
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  menu.classList.remove("open");
+}
 
-const prompt=`
-Usuário possui R$ ${total} em dívidas.
-Detalhes: ${JSON.stringify(current.debts)}.
-Pergunta: ${iaQuestion.value}
-Responda como consultor financeiro, claro e direto.
-`;
-
-const res=await fetch("https://api.openai.com/v1/chat/completions",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+OPENAI_API_KEY
-},
-body:JSON.stringify({
-model:"gpt-4o-mini",
-messages:[{role:"user",content:prompt}],
-temperature:0.4
-})
-});
-const data=await res.json();
-iaAnswer.innerText=data.choices?.[0]?.message?.content||"Erro ao responder";
+function toggleTheme(){
+  document.body.classList.toggle("light");
 }
 </script>
 </body>
