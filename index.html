@@ -5,30 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FINANÇAS EM DIA</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.umd.min.js"></script>
+
 <style>
 :root{
-  --bg:#020617;--card:#020617;--border:#1e293b;
-  --text:#e5e7eb;--muted:#94a3b8;
-  --green:#22c55e;--red:#ef4444;--blue:#38bdf8;
+--bg:#020617;--card:#020617;--border:#1e293b;
+--text:#e5e7eb;--muted:#94a3b8;
+--green:#22c55e;--red:#ef4444;--yellow:#facc15;--blue:#38bdf8;
 }
 .light{
-  --bg:#f8fafc;--card:#fff;--border:#e2e8f0;
-  --text:#020617;--muted:#475569;
+--bg:#f8fafc;--card:#fff;--border:#e2e8f0;
+--text:#020617;--muted:#475569;
 }
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:var(--bg);color:var(--text);padding:16px}
-.app{max-width:480px;margin:auto}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.app{max-width:500px;margin:auto}
+.card{background:var(--card);border:1px solid var(--border);
+border-radius:16px;padding:14px;margin-bottom:14px}
 h1{text-align:center;background:linear-gradient(90deg,var(--green),var(--blue));
 -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid var(--border);
-background:transparent;color:var(--text)}
+input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;
+border:1px solid var(--border);background:transparent;color:var(--text)}
 button{background:var(--green);border:none;font-weight:bold;color:#022c22}
-.progress{height:10px;background:#1e293b;border-radius:999px;overflow:hidden}
-.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--blue))}
 .actions{display:flex;gap:8px}
 .actions button{flex:1;background:var(--blue);color:#020617}
 .remove{background:var(--red)!important;color:#fff!important}
+.alert{background:var(--yellow);color:#422006;padding:8px;border-radius:8px;font-size:13px}
 .hidden{display:none}
 </style>
 </head>
@@ -42,17 +45,14 @@ button{background:var(--green);border:none;font-weight:bold;color:#022c22}
 <div id="login" class="card">
   <input id="pin" type="password" placeholder="Digite seu PIN">
   <button onclick="login()">Entrar</button>
+  <button onclick="createPin()">Criar / Alterar PIN</button>
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden">
 
-<!-- DASHBOARD -->
-<div class="card">
-  <strong>Total Dívidas:</strong> R$ <span id="total"></span><br>
-  <strong>Pago:</strong> R$ <span id="paid"></span>
-  <div class="progress"><span id="bar"></span></div>
-</div>
+<!-- ALERTAS -->
+<div id="alerts"></div>
 
 <!-- ADD -->
 <div class="card">
@@ -62,15 +62,9 @@ button{background:var(--green);border:none;font-weight:bold;color:#022c22}
   <button onclick="addDebt()">Adicionar</button>
 </div>
 
-<!-- EXPORT -->
-<div class="card actions">
-  <button onclick="exportJSON()">Backup</button>
-  <button onclick="importJSON()">Restaurar</button>
-</div>
-
-<div class="card actions">
-  <button onclick="exportExcel()">Excel</button>
-  <button onclick="exportPDF()">PDF</button>
+<!-- RELATÓRIO -->
+<div class="card">
+  <button onclick="exportMonthlyPDF()">📄 Gerar relatório mensal (PDF)</button>
 </div>
 
 <div id="list"></div>
@@ -78,15 +72,20 @@ button{background:var(--green);border:none;font-weight:bold;color:#022c22}
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.umd.min.js"></script>
-
 <script>
-const PIN_HASH="0217843"; // PIN fixo
 let debts=JSON.parse(localStorage.getItem("debts"))||[];
+let savedPin=localStorage.getItem("pin");
+
+function createPin(){
+  const p=prompt("Defina seu PIN");
+  if(p){
+    localStorage.setItem("pin",p);
+    alert("PIN salvo!");
+  }
+}
 
 function login(){
-  if(pin.value===PIN_HASH){
+  if(pin.value===savedPin){
     loginDiv.style.display="none";
     appDiv.classList.remove("hidden");
     render();
@@ -107,10 +106,16 @@ function removeDebt(i){debts.splice(i,1);save();}
 
 function render(){
   list.innerHTML="";
-  let total=0,paid=0;
+  alertsDiv.innerHTML="";
+  const today=new Date();
+
   debts.forEach((d,i)=>{
-    total+=d.value;
-    if(d.paid)paid+=d.value;
+    const diff=(new Date(d.date)-today)/86400000;
+    if(!d.paid && diff<=3){
+      alertsDiv.innerHTML+=`
+      <div class="alert">⚠️ ${d.name} vence em ${Math.ceil(diff)} dia(s)</div>`;
+    }
+
     list.innerHTML+=`
     <div class="card">
       <strong>${d.name}</strong><br>
@@ -121,57 +126,35 @@ function render(){
       </div>
     </div>`;
   });
-  totalEl.textContent=total.toFixed(2);
-  paidEl.textContent=paid.toFixed(2);
-  bar.style.width= total?`${(paid/total)*100}%`:"0%";
 }
 
-function exportJSON(){
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(debts)],{type:"application/json"}));
-  a.download="financas_backup.json";
-  a.click();
-}
-
-function importJSON(){
-  const i=document.createElement("input");
-  i.type="file";
-  i.onchange=e=>{
-    const r=new FileReader();
-    r.onload=()=>{debts=JSON.parse(r.result);save();}
-    r.readAsText(e.target.files[0]);
-  }
-  i.click();
-}
-
-function exportExcel(){
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.json_to_sheet(debts);
-  XLSX.utils.book_append_sheet(wb,ws,"Dívidas");
-  XLSX.writeFile(wb,"financas.xlsx");
-}
-
-function exportPDF(){
+function exportMonthlyPDF(){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF();
+  const month=new Date().toISOString().slice(0,7);
   let y=10;
-  debts.forEach(d=>{
+  let total=0;
+
+  pdf.text(`Relatório Financeiro - ${month}`,10,y); y+=10;
+
+  debts.filter(d=>d.date.startsWith(month)).forEach(d=>{
     pdf.text(`${d.name} - R$${d.value} - ${d.paid?"PAGA":"ABERTA"}`,10,y);
+    if(d.paid) total+=d.value;
     y+=8;
   });
-  pdf.save("financas.pdf");
+
+  pdf.text(`Total pago: R$ ${total.toFixed(2)}`,10,y+10);
+  pdf.save(`relatorio-financeiro-${month}.pdf`);
 }
 
 const pin=document.getElementById("pin");
 const loginDiv=document.getElementById("login");
 const appDiv=document.getElementById("app");
 const list=document.getElementById("list");
+const alertsDiv=document.getElementById("alerts");
 const name=document.getElementById("name");
 const value=document.getElementById("value");
 const date=document.getElementById("date");
-const totalEl=document.getElementById("total");
-const paidEl=document.getElementById("paid");
-const bar=document.getElementById("bar");
 </script>
 </body>
 </html>
