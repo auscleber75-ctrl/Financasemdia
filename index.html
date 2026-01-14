@@ -6,239 +6,172 @@
 <title>FINANÇAS EM DIA</title>
 
 <style>
-:root {
-  --bg: #020617;
-  --card: rgba(255,255,255,0.03);
-  --border: rgba(255,255,255,0.08);
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --green: #22c55e;
-  --red: #ef4444;
-  --yellow: #facc15;
-  --accent: #38bdf8;
+:root{
+  --bg:#020617;--card:#020617;--border:#1e293b;
+  --text:#e5e7eb;--muted:#94a3b8;
+  --green:#22c55e;--red:#ef4444;--blue:#38bdf8;
 }
-
-.light {
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #020617;
-  --muted: #475569;
+.light{
+  --bg:#f8fafc;--card:#fff;--border:#e2e8f0;
+  --text:#020617;--muted:#475569;
 }
-
-* {
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  padding: 16px;
-  transition: 0.3s;
-}
-
-.app {
-  max-width: 480px;
-  margin: auto;
-}
-
-/* LOGO */
-.logo {
-  text-align: center;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.subtitle {
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-
-/* TOGGLE */
-.toggle {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.toggle button {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 8px 14px;
-  border-radius: 20px;
-  color: var(--text);
-}
-
-/* CARD */
-.card {
-  background: var(--card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-/* INPUTS */
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 15px;
-}
-
-button.primary {
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  border: none;
-  font-weight: bold;
-  color: #020617;
-}
-
-/* DEBT */
-.debt {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.badge {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  width: fit-content;
-}
-
-.paid { background: var(--green); color: #022c22; }
-.late { background: var(--red); }
-.warning { background: var(--yellow); color: #422006; }
-
-.actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.actions button {
-  flex: 1;
-  background: var(--accent);
-  color: #020617;
-}
-
-.remove {
-  background: var(--red) !important;
-  color: white !important;
-}
-
-.line {
-  text-decoration: line-through;
-  opacity: 0.5;
-}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:var(--bg);color:var(--text);padding:16px}
+.app{max-width:480px;margin:auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+h1{text-align:center;background:linear-gradient(90deg,var(--green),var(--blue));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid var(--border);
+background:transparent;color:var(--text)}
+button{background:var(--green);border:none;font-weight:bold;color:#022c22}
+.progress{height:10px;background:#1e293b;border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--blue))}
+.actions{display:flex;gap:8px}
+.actions button{flex:1;background:var(--blue);color:#020617}
+.remove{background:var(--red)!important;color:#fff!important}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 <div class="app">
 
-  <div class="logo">FINANÇAS EM DIA</div>
-  <div class="subtitle">Controle simples. Vida financeira leve.</div>
+<h1>FINANÇAS EM DIA</h1>
 
-  <div class="toggle">
-    <button onclick="toggleTheme()">🌗 Alternar tema</button>
-  </div>
-
-  <!-- ADD -->
-  <div class="card">
-    <input id="name" placeholder="Nome da dívida">
-    <input id="value" type="number" placeholder="Valor (R$)">
-    <input id="date" type="date">
-    <button class="primary" onclick="addDebt()">Adicionar dívida</button>
-  </div>
-
-  <!-- LIST -->
-  <div id="list"></div>
-
+<!-- LOGIN -->
+<div id="login" class="card">
+  <input id="pin" type="password" placeholder="Digite seu PIN">
+  <button onclick="login()">Entrar</button>
 </div>
 
+<!-- APP -->
+<div id="app" class="hidden">
+
+<!-- DASHBOARD -->
+<div class="card">
+  <strong>Total Dívidas:</strong> R$ <span id="total"></span><br>
+  <strong>Pago:</strong> R$ <span id="paid"></span>
+  <div class="progress"><span id="bar"></span></div>
+</div>
+
+<!-- ADD -->
+<div class="card">
+  <input id="name" placeholder="Dívida">
+  <input id="value" type="number" placeholder="Valor">
+  <input id="date" type="date">
+  <button onclick="addDebt()">Adicionar</button>
+</div>
+
+<!-- EXPORT -->
+<div class="card actions">
+  <button onclick="exportJSON()">Backup</button>
+  <button onclick="importJSON()">Restaurar</button>
+</div>
+
+<div class="card actions">
+  <button onclick="exportExcel()">Excel</button>
+  <button onclick="exportPDF()">PDF</button>
+</div>
+
+<div id="list"></div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.umd.min.js"></script>
+
 <script>
-let debts = JSON.parse(localStorage.getItem("debts")) || [];
-let theme = localStorage.getItem("theme") || "dark";
+const PIN_HASH="0217843"; // PIN fixo
+let debts=JSON.parse(localStorage.getItem("debts"))||[];
 
-document.body.classList.toggle("light", theme === "light");
-
-function toggleTheme() {
-  theme = theme === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", theme);
-  document.body.classList.toggle("light", theme === "light");
+function login(){
+  if(pin.value===PIN_HASH){
+    loginDiv.style.display="none";
+    appDiv.classList.remove("hidden");
+    render();
+  } else alert("PIN incorreto");
 }
 
-function save() {
-  localStorage.setItem("debts", JSON.stringify(debts));
-  render();
-}
+function save(){localStorage.setItem("debts",JSON.stringify(debts));render();}
 
-function addDebt() {
-  if (!name.value || !value.value || !date.value) return;
-  debts.push({ name: name.value, value: value.value, date: date.value, paid: false });
-  name.value = value.value = date.value = "";
+function addDebt(){
+  if(!name.value||!value.value||!date.value)return;
+  debts.push({name:name.value,value:+value.value,date:date.value,paid:false});
+  name.value=value.value=date.value="";
   save();
 }
 
-function togglePaid(i) {
-  debts[i].paid = !debts[i].paid;
-  save();
-}
+function togglePaid(i){debts[i].paid=!debts[i].paid;save();}
+function removeDebt(i){debts.splice(i,1);save();}
 
-function removeDebt(i) {
-  debts.splice(i, 1);
-  save();
-}
-
-function status(d) {
-  if (d.paid) return "paid";
-  const diff = (new Date(d.date) - new Date()) / 86400000;
-  if (diff < 0) return "late";
-  if (diff <= 3) return "warning";
-  return "";
-}
-
-function render() {
-  list.innerHTML = "";
-  debts.forEach((d, i) => {
-    const s = status(d);
-    list.innerHTML += `
-      <div class="card debt ${d.paid ? "line" : ""}">
-        <strong>${d.name}</strong>
-        <span>R$ ${d.value}</span>
-        <span>Vence em ${new Date(d.date).toLocaleDateString()}</span>
-        ${s ? `<span class="badge ${s}">${s === "paid" ? "PAGA" : s === "late" ? "ATRASADA" : "EM BREVE"}</span>` : ""}
-        <div class="actions">
-          <button onclick="togglePaid(${i})">${d.paid ? "Desfazer" : "Pagar"}</button>
-          <button class="remove" onclick="removeDebt(${i})">Remover</button>
-        </div>
+function render(){
+  list.innerHTML="";
+  let total=0,paid=0;
+  debts.forEach((d,i)=>{
+    total+=d.value;
+    if(d.paid)paid+=d.value;
+    list.innerHTML+=`
+    <div class="card">
+      <strong>${d.name}</strong><br>
+      R$ ${d.value} - ${new Date(d.date).toLocaleDateString()}
+      <div class="actions">
+        <button onclick="togglePaid(${i})">${d.paid?"Desfazer":"Pagar"}</button>
+        <button class="remove" onclick="removeDebt(${i})">Remover</button>
       </div>
-    `;
+    </div>`;
   });
+  totalEl.textContent=total.toFixed(2);
+  paidEl.textContent=paid.toFixed(2);
+  bar.style.width= total?`${(paid/total)*100}%`:"0%";
 }
 
-const name = document.getElementById("name");
-const value = document.getElementById("value");
-const date = document.getElementById("date");
-const list = document.getElementById("list");
+function exportJSON(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(debts)],{type:"application/json"}));
+  a.download="financas_backup.json";
+  a.click();
+}
 
-render();
+function importJSON(){
+  const i=document.createElement("input");
+  i.type="file";
+  i.onchange=e=>{
+    const r=new FileReader();
+    r.onload=()=>{debts=JSON.parse(r.result);save();}
+    r.readAsText(e.target.files[0]);
+  }
+  i.click();
+}
+
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(debts);
+  XLSX.utils.book_append_sheet(wb,ws,"Dívidas");
+  XLSX.writeFile(wb,"financas.xlsx");
+}
+
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  let y=10;
+  debts.forEach(d=>{
+    pdf.text(`${d.name} - R$${d.value} - ${d.paid?"PAGA":"ABERTA"}`,10,y);
+    y+=8;
+  });
+  pdf.save("financas.pdf");
+}
+
+const pin=document.getElementById("pin");
+const loginDiv=document.getElementById("login");
+const appDiv=document.getElementById("app");
+const list=document.getElementById("list");
+const name=document.getElementById("name");
+const value=document.getElementById("value");
+const date=document.getElementById("date");
+const totalEl=document.getElementById("total");
+const paidEl=document.getElementById("paid");
+const bar=document.getElementById("bar");
 </script>
 </body>
 </html>
