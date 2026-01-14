@@ -5,22 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finanças em Dia</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
 :root{
 --bg:#020617;
 --card:rgba(255,255,255,.05);
---border:rgba(255,255,255,.08);
+--border:rgba(255,255,255,.1);
 --text:#e5e7eb;
 --muted:#94a3b8;
---primary:#22c55e;
---danger:#ef4444;
---warn:#facc15;
 --gradient:linear-gradient(135deg,#22c55e,#38bdf8);
 }
 .light{
@@ -30,66 +24,57 @@
 --text:#020617;
 --muted:#475569;
 }
-
 *{box-sizing:border-box;font-family:Inter,sans-serif}
 body{
 margin:0;background:var(--bg);color:var(--text);
 min-height:100vh;display:flex;justify-content:center;
 padding:16px;
 }
-.app{width:100%;max-width:420px}
+.app{max-width:420px;width:100%}
+.hidden{display:none}
 
 .logo{
 text-align:center;font-size:28px;font-weight:800;
 background:var(--gradient);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-margin-bottom:8px;
-}
-.logo span{
-display:block;font-size:11px;color:var(--muted);letter-spacing:4px;
--webkit-text-fill-color:var(--muted);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+margin-bottom:12px;
 }
 
 .card{
 background:var(--card);
 border:1px solid var(--border);
-border-radius:20px;
-padding:18px;margin-bottom:14px;
-backdrop-filter:blur(14px);
+border-radius:18px;
+padding:18px;
+margin-bottom:14px;
 }
 
-h2{margin:0 0 10px;font-size:18px}
 label{font-size:12px;color:var(--muted)}
-.field{margin-bottom:10px}
-
 input,button{
-width:100%;padding:12px;margin-top:4px;
+width:100%;padding:12px;margin-top:6px;
 border-radius:12px;border:1px solid var(--border);
 background:transparent;color:var(--text);
 }
 button{
-background:var(--gradient);border:none;
-font-weight:700;color:#022c22;
+background:var(--gradient);
+border:none;font-weight:700;color:#022c22;
 }
 
 .link{text-align:center;color:#38bdf8;cursor:pointer;margin-top:10px}
-.hidden{display:none}
 
-.progress{
-height:10px;background:#1e293b;border-radius:999px;overflow:hidden;
-}
-.progress span{display:block;height:100%;background:var(--gradient)}
-
-.alert{font-size:13px;margin-bottom:6px}
-
+/* POPUP */
 .overlay{
 position:fixed;inset:0;
 background:rgba(0,0,0,.6);
 display:flex;align-items:center;justify-content:center;
+z-index:10;
 }
 .popup{
-background:var(--card);border:1px solid var(--border);
-border-radius:18px;padding:20px;text-align:center;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+text-align:center;
 width:90%;max-width:320px;
 }
 </style>
@@ -98,235 +83,125 @@ width:90%;max-width:320px;
 <body>
 <div class="app">
 
-<div class="logo">FINANÇAS EM DIA<span>CONTROLE • CLAREZA • FUTURO</span></div>
+<div class="logo">FINANÇAS EM DIA</div>
 
 <!-- LOGIN -->
-<div id="login" class="card">
-<h2>Entrar</h2>
-<div class="field"><label>Usuário ou Email</label><input id="loginUser"></div>
-<div class="field"><label>Senha</label><input id="loginPass" type="password"></div>
+<div id="loginCard" class="card">
+<label>Usuário ou Email</label>
+<input id="loginUser">
+<label>Senha</label>
+<input id="loginPass" type="password">
 <button onclick="login()">Entrar</button>
 <div class="link" onclick="showRegister()">Criar conta</div>
 </div>
 
 <!-- CADASTRO -->
-<div id="register" class="card hidden">
-<h2>Criar conta</h2>
-<div class="field"><label>Nome completo</label><input id="regName"></div>
-<div class="field"><label>Usuário</label><input id="regUser"></div>
-<div class="field"><label>Email</label><input id="regEmail"></div>
-<div class="field"><label>CPF</label><input id="regCpf" maxlength="14"></div>
-<div class="field"><label>Nascimento</label><input id="regBirth" type="date"></div>
-<div class="field"><label>Telefone</label><input id="regPhone" maxlength="15"></div>
-<div class="field"><label>Senha</label><input id="regPass" type="password"></div>
+<div id="registerCard" class="card hidden">
+<label>Nome completo</label>
+<input id="regName">
+<label>Usuário</label>
+<input id="regUser">
+<label>Email</label>
+<input id="regEmail">
+<label>Senha</label>
+<input id="regPass" type="password">
 <button onclick="register()">Cadastrar</button>
 <div class="link" onclick="showLogin()">Voltar</div>
 </div>
 
-<!-- POPUP -->
+<!-- POPUP (SÓ APÓS LOGIN) -->
 <div id="welcomePopup" class="overlay hidden">
 <div class="popup">
 <h2 id="welcomeText"></h2>
-<p style="color:var(--muted)">Deseja personalizar o app?</p>
-<button onclick="toggleTheme()">🎨 Alternar tema</button>
-<button onclick="closePopup()">Continuar</button>
+<p style="color:var(--muted)">Deseja personalizar o tema?</p>
+<button onclick="toggleTheme()">Alternar tema</button>
+<button onclick="continueApp()">Continuar</button>
 </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
-
 <div class="card">
-<h2>Alertas</h2>
-<div id="alerts"></div>
+<h2>Dashboard</h2>
+<canvas id="chart"></canvas>
+</div>
 </div>
 
-<div class="card">
-<h2>Resumo</h2>
-<p>Total em dívidas: <strong>R$ <span id="total">0</span></strong></p>
-<div class="progress"><span id="bar" style="width:0%"></span></div>
-</div>
-
-<div class="card">
-<canvas id="chartStatus"></canvas>
-</div>
-
-<div class="card">
-<h2>Previsão financeira</h2>
-<div id="forecast"></div>
-</div>
-
-<div class="card">
-<h2>Assistente Financeiro 🤖</h2>
-<input id="iaQuestion" placeholder="Ex: Vou conseguir pagar minhas dívidas?">
-<button onclick="askIA()">Perguntar</button>
-<div id="iaAnswer" style="margin-top:10px;color:var(--muted)"></div>
-</div>
-
-<div class="card">
-<button onclick="exportExcel()">📊 Exportar Excel</button>
-<button onclick="exportPDF()">📄 Exportar PDF</button>
-</div>
-
-</div>
 </div>
 
 <script>
-/* ================= CONFIG OPENAI ================= */
-/*
-⚠️ APENAS PARA TESTE
-Em produção, use um BACKEND / PROXY
-*/
-const OPENAI_API_KEY = "SUA_CHAVE_AQUI";
-
-/* ================= APP ================= */
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let current = null;
-let chart;
-
-/* FORMATAÇÃO */
-regCpf.oninput=e=>{
-e.target.value=e.target.value.replace(/\D/g,'')
-.replace(/(\d{3})(\d)/,'$1.$2')
-.replace(/(\d{3})(\d)/,'$1.$2')
-.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
-};
-regPhone.oninput=e=>{
-e.target.value=e.target.value.replace(/\D/g,'')
-.replace(/(\d{2})(\d)/,'($1) $2')
-.replace(/(\d{5})(\d{4})$/,'$1-$2');
-};
 
 /* UI */
-function showRegister(){login.classList.add("hidden");register.classList.remove("hidden")}
-function showLogin(){register.classList.add("hidden");login.classList.remove("hidden")}
+function showRegister(){
+loginCard.classList.add("hidden");
+registerCard.classList.remove("hidden");
+}
+function showLogin(){
+registerCard.classList.add("hidden");
+loginCard.classList.remove("hidden");
+}
 
 /* AUTH */
 function register(){
 if(!regName.value||!regUser.value||!regEmail.value||!regPass.value)
-return alert("Preencha todos os campos");
+return alert("Preencha tudo");
 
 if(users.find(u=>u.user===regUser.value||u.email===regEmail.value))
 return alert("Usuário ou email já existe");
 
 users.push({
-name:regName.value,user:regUser.value,email:regEmail.value,
-pass:regPass.value,debts:[],aporte:300,goal:1000,theme:"dark"
+name:regName.value,
+user:regUser.value,
+email:regEmail.value,
+pass:regPass.value,
+theme:"dark"
 });
+
 localStorage.setItem("users",JSON.stringify(users));
 alert("Conta criada!");
 showLogin();
 }
 
 function login(){
-const u=users.find(u=>(u.user===loginUser.value||u.email===loginUser.value)&&u.pass===loginPass.value);
-if(!u)return alert("Login inválido");
-current=u;
-login.classList.add("hidden");
-welcomeText.innerText=`Bem-vindo(a), ${u.name.split(" ")[0]}!`;
+const u = users.find(u =>
+(u.user===loginUser.value || u.email===loginUser.value) &&
+u.pass===loginPass.value
+);
+if(!u) return alert("Login inválido");
+
+current = u;
+
+/* GARANTIA ABSOLUTA */
+loginCard.classList.add("hidden");
+registerCard.classList.add("hidden");
+welcomeText.innerText = `Bem-vindo(a), ${u.name.split(" ")[0]}!`;
 welcomePopup.classList.remove("hidden");
-document.body.classList.toggle("light",u.theme==="light");
 }
 
+/* POPUP */
 function toggleTheme(){
-current.theme=current.theme==="dark"?"light":"dark";
-document.body.classList.toggle("light",current.theme==="light");
+current.theme = current.theme==="dark" ? "light" : "dark";
+document.body.classList.toggle("light", current.theme==="light");
 localStorage.setItem("users",JSON.stringify(users));
 }
 
-function closePopup(){
+function continueApp(){
 welcomePopup.classList.add("hidden");
 dashboard.classList.remove("hidden");
-render();
+renderChart();
 }
 
-/* ALERTAS */
-function checkAlerts(){
-const today=new Date();
-alerts.innerHTML="";
-current.debts.forEach(d=>{
-const diff=Math.ceil((new Date(d.date)-today)/(1000*60*60*24));
-if(diff<0)alerts.innerHTML+=`<div class="alert" style="color:var(--danger)">⚠️ ${d.name} vencida</div>`;
-else if(diff<=3)alerts.innerHTML+=`<div class="alert" style="color:var(--warn)">⏰ ${d.name} vence em ${diff} dias</div>`;
-});
-if(!alerts.innerHTML)alerts.innerHTML="<small style='color:var(--muted)'>Nenhum alerta</small>";
-}
-
-/* GRÁFICO */
-function drawChart(){
-let vencidas=0,emdia=0;
-current.debts.forEach(d=>new Date(d.date)<new Date()?vencidas++:emdia++);
-if(chart)chart.destroy();
-chart=new Chart(chartStatus,{
+/* DASH */
+function renderChart(){
+new Chart(chart,{
 type:"doughnut",
-data:{labels:["Em dia","Vencidas"],
-datasets:[{data:[emdia,vencidas],backgroundColor:["#22c55e","#ef4444"]}]}
+data:{
+labels:["Organizado","Ajustar"],
+datasets:[{data:[70,30],backgroundColor:["#22c55e","#ef4444"]}]
+}
 });
-}
-
-/* PREVISÃO */
-function forecast(){
-let total=0;current.debts.forEach(d=>total+=d.value);
-const months=Math.ceil(total/current.aporte);
-forecast.innerHTML=`
-<p>📉 Dívidas: R$ ${total.toFixed(2)}</p>
-<p>📆 Quitação estimada: ${months||0} meses</p>
-<p>💡 ${months>6?"Aumente o aporte.":"Você está indo bem."}</p>`;
-}
-
-/* IA OPENAI */
-async function askIA(){
-iaAnswer.innerText="Pensando...";
-let total=0;current.debts.forEach(d=>total+=d.value);
-
-const prompt=`
-Usuário possui R$ ${total} em dívidas.
-Aporte mensal: R$ ${current.aporte}.
-Meta: R$ ${current.goal}.
-Pergunta: ${iaQuestion.value}
-Responda como consultor financeiro, simples e direto.
-`;
-
-const res=await fetch("https://api.openai.com/v1/chat/completions",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+OPENAI_API_KEY
-},
-body:JSON.stringify({
-model:"gpt-4o-mini",
-messages:[{role:"user",content:prompt}],
-temperature:0.4
-})
-});
-
-const data=await res.json();
-iaAnswer.innerText=data.choices?.[0]?.message?.content||"Erro ao responder";
-}
-
-/* EXPORTAR */
-function exportExcel(){
-const ws=XLSX.utils.json_to_sheet(current.debts);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Dividas");
-XLSX.writeFile(wb,"financas.xlsx");
-}
-function exportPDF(){
-const {jsPDF}=window.jspdf;
-const pdf=new jsPDF();
-pdf.text("Relatório Financeiro",10,10);
-let y=20;
-current.debts.forEach(d=>{
-pdf.text(`${d.name} - R$ ${d.value}`,10,y);y+=8;
-});
-pdf.save("financas.pdf");
-}
-
-/* RENDER */
-function render(){
-checkAlerts();
-drawChart();
-forecast();
 }
 </script>
 </body>
