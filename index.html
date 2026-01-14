@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FINANÇAS EM DIA</title>
+<title>Finanças em Dia</title>
 
-<!-- FONTES -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
 :root{
 --bg:#020617;
---card:rgba(255,255,255,.03);
+--card:rgba(255,255,255,.05);
 --border:rgba(255,255,255,.08);
 --text:#e5e7eb;
 --muted:#94a3b8;
---green:#22c55e;
---red:#ef4444;
---blue:#38bdf8;
---gradient:linear-gradient(90deg,#22c55e,#38bdf8);
+--primary:#22c55e;
+--danger:#ef4444;
+--warn:#facc15;
+--gradient:linear-gradient(135deg,#22c55e,#38bdf8);
 }
-
 .light{
 --bg:#f8fafc;
 --card:#ffffff;
@@ -30,84 +32,66 @@
 }
 
 *{box-sizing:border-box;font-family:Inter,sans-serif}
-body{margin:0;background:var(--bg);color:var(--text);padding:16px}
-.app{max-width:500px;margin:auto}
+body{
+margin:0;background:var(--bg);color:var(--text);
+min-height:100vh;display:flex;justify-content:center;
+padding:16px;
+}
+.app{width:100%;max-width:420px}
 
-/* LOGO */
 .logo{
-text-align:center;
-font-size:28px;
-font-weight:800;
-letter-spacing:3px;
+text-align:center;font-size:28px;font-weight:800;
 background:var(--gradient);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-margin-bottom:6px;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+margin-bottom:8px;
 }
 .logo span{
-display:block;
-font-size:11px;
-letter-spacing:4px;
-color:var(--muted);
+display:block;font-size:11px;color:var(--muted);letter-spacing:4px;
 -webkit-text-fill-color:var(--muted);
 }
 
-/* CARDS */
 .card{
 background:var(--card);
-backdrop-filter:blur(14px);
 border:1px solid var(--border);
-border-radius:18px;
-padding:16px;
-margin-bottom:16px;
+border-radius:20px;
+padding:18px;margin-bottom:14px;
+backdrop-filter:blur(14px);
 }
 
-/* TEXT */
-h2{margin:0 0 8px;font-size:18px}
-small{color:var(--muted)}
+h2{margin:0 0 10px;font-size:18px}
+label{font-size:12px;color:var(--muted)}
+.field{margin-bottom:10px}
 
-/* INPUTS */
 input,button{
-width:100%;
-padding:12px;
-margin-top:8px;
-border-radius:12px;
-border:1px solid var(--border);
-background:transparent;
-color:var(--text);
-font-size:14px;
+width:100%;padding:12px;margin-top:4px;
+border-radius:12px;border:1px solid var(--border);
+background:transparent;color:var(--text);
 }
 button{
-background:var(--gradient);
-border:none;
-font-weight:700;
-color:#022c22;
+background:var(--gradient);border:none;
+font-weight:700;color:#022c22;
 }
-.link{text-align:center;color:var(--blue);margin-top:12px;cursor:pointer}
+
+.link{text-align:center;color:#38bdf8;cursor:pointer;margin-top:10px}
 .hidden{display:none}
 
-/* DASH */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.stat{
-background:rgba(0,0,0,.2);
-padding:12px;
-border-radius:14px;
-}
 .progress{
-height:10px;
-background:#1e293b;
-border-radius:999px;
-overflow:hidden;
-margin-top:6px;
+height:10px;background:#1e293b;border-radius:999px;overflow:hidden;
 }
-.progress span{
-display:block;
-height:100%;
-background:var(--gradient);
-}
+.progress span{display:block;height:100%;background:var(--gradient)}
 
-/* LIST */
-.item{border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
+.alert{font-size:13px;margin-bottom:6px}
+
+.overlay{
+position:fixed;inset:0;
+background:rgba(0,0,0,.6);
+display:flex;align-items:center;justify-content:center;
+}
+.popup{
+background:var(--card);border:1px solid var(--border);
+border-radius:18px;padding:20px;text-align:center;
+width:90%;max-width:320px;
+}
 </style>
 </head>
 
@@ -118,102 +102,117 @@ background:var(--gradient);
 
 <!-- LOGIN -->
 <div id="login" class="card">
-  <h2>Login</h2>
-  <input id="loginUser" placeholder="Usuário ou Email">
-  <input id="loginPass" type="password" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
-  <div class="link" onclick="showRegister()">Criar conta</div>
+<h2>Entrar</h2>
+<div class="field"><label>Usuário ou Email</label><input id="loginUser"></div>
+<div class="field"><label>Senha</label><input id="loginPass" type="password"></div>
+<button onclick="login()">Entrar</button>
+<div class="link" onclick="showRegister()">Criar conta</div>
 </div>
 
 <!-- CADASTRO -->
 <div id="register" class="card hidden">
-  <h2>Criar conta</h2>
-  <input id="regName" placeholder="Nome completo">
-  <input id="regUser" placeholder="Usuário">
-  <input id="regEmail" placeholder="Email">
-  <input id="regCpf" placeholder="CPF">
-  <input id="regBirth" type="date">
-  <input id="regPhone" placeholder="Telefone">
-  <input id="regPass" type="password" placeholder="Senha">
-  <button onclick="register()">Cadastrar</button>
-  <div class="link" onclick="showLogin()">Voltar</div>
+<h2>Criar conta</h2>
+<div class="field"><label>Nome completo</label><input id="regName"></div>
+<div class="field"><label>Usuário</label><input id="regUser"></div>
+<div class="field"><label>Email</label><input id="regEmail"></div>
+<div class="field"><label>CPF</label><input id="regCpf" maxlength="14"></div>
+<div class="field"><label>Nascimento</label><input id="regBirth" type="date"></div>
+<div class="field"><label>Telefone</label><input id="regPhone" maxlength="15"></div>
+<div class="field"><label>Senha</label><input id="regPass" type="password"></div>
+<button onclick="register()">Cadastrar</button>
+<div class="link" onclick="showLogin()">Voltar</div>
 </div>
 
-<!-- APP -->
-<div id="app" class="hidden">
-
-<div class="card">
-  <h2 id="welcome"></h2>
-  <button onclick="toggleTheme()">🎨 Personalizar tema</button>
+<!-- POPUP -->
+<div id="welcomePopup" class="overlay hidden">
+<div class="popup">
+<h2 id="welcomeText"></h2>
+<p style="color:var(--muted)">Deseja personalizar o app?</p>
+<button onclick="toggleTheme()">🎨 Alternar tema</button>
+<button onclick="closePopup()">Continuar</button>
+</div>
 </div>
 
 <!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+
 <div class="card">
-  <h2>Dashboard</h2>
-  <div class="grid">
-    <div class="stat">Total Dívidas<br><strong>R$ <span id="total"></span></strong></div>
-    <div class="stat">Aporte Mensal<br><strong>R$ <span id="aporte"></span></strong></div>
-  </div>
-  <small>Progresso da meta</small>
-  <div class="progress"><span id="bar"></span></div>
+<h2>Alertas</h2>
+<div id="alerts"></div>
 </div>
 
-<!-- META -->
 <div class="card">
-  <h2>Meta mensal</h2>
-  <input id="goal" type="number" placeholder="Valor da meta">
-  <button onclick="saveGoal()">Salvar meta</button>
+<h2>Resumo</h2>
+<p>Total em dívidas: <strong>R$ <span id="total">0</span></strong></p>
+<div class="progress"><span id="bar" style="width:0%"></span></div>
 </div>
 
-<!-- DÍVIDAS -->
 <div class="card">
-  <h2>Adicionar dívida</h2>
-  <input id="dName" placeholder="Descrição">
-  <input id="dValue" type="number" placeholder="Valor">
-  <input id="dDate" type="date">
-  <button onclick="addDebt()">Adicionar</button>
-  <div id="list"></div>
+<canvas id="chartStatus"></canvas>
+</div>
+
+<div class="card">
+<h2>Previsão financeira</h2>
+<div id="forecast"></div>
+</div>
+
+<div class="card">
+<h2>Assistente Financeiro 🤖</h2>
+<input id="iaQuestion" placeholder="Ex: Vou conseguir pagar minhas dívidas?">
+<button onclick="askIA()">Perguntar</button>
+<div id="iaAnswer" style="margin-top:10px;color:var(--muted)"></div>
+</div>
+
+<div class="card">
+<button onclick="exportExcel()">📊 Exportar Excel</button>
+<button onclick="exportPDF()">📄 Exportar PDF</button>
 </div>
 
 </div>
 </div>
 
 <script>
-let users=JSON.parse(localStorage.getItem("users"))||[];
-let current=null;
+/* ================= CONFIG OPENAI ================= */
+/*
+⚠️ APENAS PARA TESTE
+Em produção, use um BACKEND / PROXY
+*/
+const OPENAI_API_KEY = "SUA_CHAVE_AQUI";
 
-/* VALIDACOES */
-const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-function validCPF(cpf){
-cpf=cpf.replace(/\D/g,'');
-if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
-let s=0;for(let i=0;i<9;i++)s+=cpf[i]*(10-i);
-let d=11-(s%11);if(d>=10)d=0;
-if(d!=cpf[9])return false;
-s=0;for(let i=0;i<10;i++)s+=cpf[i]*(11-i);
-d=11-(s%11);if(d>=10)d=0;
-return d==cpf[10];
-}
+/* ================= APP ================= */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let current = null;
+let chart;
+
+/* FORMATAÇÃO */
+regCpf.oninput=e=>{
+e.target.value=e.target.value.replace(/\D/g,'')
+.replace(/(\d{3})(\d)/,'$1.$2')
+.replace(/(\d{3})(\d)/,'$1.$2')
+.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+};
+regPhone.oninput=e=>{
+e.target.value=e.target.value.replace(/\D/g,'')
+.replace(/(\d{2})(\d)/,'($1) $2')
+.replace(/(\d{5})(\d{4})$/,'$1-$2');
+};
 
 /* UI */
-function showRegister(){loginDiv.classList.add("hidden");registerDiv.classList.remove("hidden")}
-function showLogin(){registerDiv.classList.add("hidden");loginDiv.classList.remove("hidden")}
+function showRegister(){login.classList.add("hidden");register.classList.remove("hidden")}
+function showLogin(){register.classList.add("hidden");login.classList.remove("hidden")}
 
 /* AUTH */
 function register(){
-if(!validEmail(regEmail.value))return alert("Email inválido");
-if(!validCPF(regCpf.value))return alert("CPF inválido");
-const u={
-name:regName.value,
-user:regUser.value,
-email:regEmail.value,
-pass:regPass.value,
-debts:[],
-aporte:0,
-goal:0,
-theme:"dark"
-};
-users.push(u);
+if(!regName.value||!regUser.value||!regEmail.value||!regPass.value)
+return alert("Preencha todos os campos");
+
+if(users.find(u=>u.user===regUser.value||u.email===regEmail.value))
+return alert("Usuário ou email já existe");
+
+users.push({
+name:regName.value,user:regUser.value,email:regEmail.value,
+pass:regPass.value,debts:[],aporte:300,goal:1000,theme:"dark"
+});
 localStorage.setItem("users",JSON.stringify(users));
 alert("Conta criada!");
 showLogin();
@@ -223,50 +222,112 @@ function login(){
 const u=users.find(u=>(u.user===loginUser.value||u.email===loginUser.value)&&u.pass===loginPass.value);
 if(!u)return alert("Login inválido");
 current=u;
-loginDiv.classList.add("hidden");
-appDiv.classList.remove("hidden");
-welcome.innerText=`Bem-vindo(a), ${u.name.split(" ")[0]}!`;
+login.classList.add("hidden");
+welcomeText.innerText=`Bem-vindo(a), ${u.name.split(" ")[0]}!`;
+welcomePopup.classList.remove("hidden");
 document.body.classList.toggle("light",u.theme==="light");
-render();
 }
 
-/* APP */
 function toggleTheme(){
 current.theme=current.theme==="dark"?"light":"dark";
 document.body.classList.toggle("light",current.theme==="light");
-save();
+localStorage.setItem("users",JSON.stringify(users));
 }
 
-function save(){localStorage.setItem("users",JSON.stringify(users));render();}
-
-function saveGoal(){current.goal=+goal.value||0;save();}
-
-function addDebt(){
-current.debts.push({name:dName.value,value:+dValue.value,date:dDate.value});
-dName.value=dValue.value=dDate.value="";
-save();
+function closePopup(){
+welcomePopup.classList.add("hidden");
+dashboard.classList.remove("hidden");
+render();
 }
 
-function render(){
-let total=0;
-list.innerHTML="";
+/* ALERTAS */
+function checkAlerts(){
+const today=new Date();
+alerts.innerHTML="";
 current.debts.forEach(d=>{
-total+=d.value;
-list.innerHTML+=`<div class="item"><strong>${d.name}</strong><br>R$ ${d.value} • ${new Date(d.date).toLocaleDateString()}</div>`;
+const diff=Math.ceil((new Date(d.date)-today)/(1000*60*60*24));
+if(diff<0)alerts.innerHTML+=`<div class="alert" style="color:var(--danger)">⚠️ ${d.name} vencida</div>`;
+else if(diff<=3)alerts.innerHTML+=`<div class="alert" style="color:var(--warn)">⏰ ${d.name} vence em ${diff} dias</div>`;
 });
-totalEl.textContent=total.toFixed(2);
-aporteEl.textContent=current.aporte||0;
-bar.style.width=current.goal?`${Math.min((total/current.goal)*100,100)}%`:"0%";
+if(!alerts.innerHTML)alerts.innerHTML="<small style='color:var(--muted)'>Nenhum alerta</small>";
 }
 
-/* DOM */
-const loginDiv=login;
-const registerDiv=register;
-const appDiv=app;
-const welcome=welcome;
-const totalEl=total;
-const aporteEl=aporte;
-const bar=bar;
+/* GRÁFICO */
+function drawChart(){
+let vencidas=0,emdia=0;
+current.debts.forEach(d=>new Date(d.date)<new Date()?vencidas++:emdia++);
+if(chart)chart.destroy();
+chart=new Chart(chartStatus,{
+type:"doughnut",
+data:{labels:["Em dia","Vencidas"],
+datasets:[{data:[emdia,vencidas],backgroundColor:["#22c55e","#ef4444"]}]}
+});
+}
+
+/* PREVISÃO */
+function forecast(){
+let total=0;current.debts.forEach(d=>total+=d.value);
+const months=Math.ceil(total/current.aporte);
+forecast.innerHTML=`
+<p>📉 Dívidas: R$ ${total.toFixed(2)}</p>
+<p>📆 Quitação estimada: ${months||0} meses</p>
+<p>💡 ${months>6?"Aumente o aporte.":"Você está indo bem."}</p>`;
+}
+
+/* IA OPENAI */
+async function askIA(){
+iaAnswer.innerText="Pensando...";
+let total=0;current.debts.forEach(d=>total+=d.value);
+
+const prompt=`
+Usuário possui R$ ${total} em dívidas.
+Aporte mensal: R$ ${current.aporte}.
+Meta: R$ ${current.goal}.
+Pergunta: ${iaQuestion.value}
+Responda como consultor financeiro, simples e direto.
+`;
+
+const res=await fetch("https://api.openai.com/v1/chat/completions",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+OPENAI_API_KEY
+},
+body:JSON.stringify({
+model:"gpt-4o-mini",
+messages:[{role:"user",content:prompt}],
+temperature:0.4
+})
+});
+
+const data=await res.json();
+iaAnswer.innerText=data.choices?.[0]?.message?.content||"Erro ao responder";
+}
+
+/* EXPORTAR */
+function exportExcel(){
+const ws=XLSX.utils.json_to_sheet(current.debts);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Dividas");
+XLSX.writeFile(wb,"financas.xlsx");
+}
+function exportPDF(){
+const {jsPDF}=window.jspdf;
+const pdf=new jsPDF();
+pdf.text("Relatório Financeiro",10,10);
+let y=20;
+current.debts.forEach(d=>{
+pdf.text(`${d.name} - R$ ${d.value}`,10,y);y+=8;
+});
+pdf.save("financas.pdf");
+}
+
+/* RENDER */
+function render(){
+checkAlerts();
+drawChart();
+forecast();
+}
 </script>
 </body>
 </html>
