@@ -11,8 +11,8 @@
 <style>
 :root{
 --bg:#020617;
---card:rgba(255,255,255,.05);
---border:rgba(255,255,255,.1);
+--card:#0f172a;
+--border:#1e293b;
 --text:#e5e7eb;
 --muted:#94a3b8;
 --gradient:linear-gradient(135deg,#22c55e,#38bdf8);
@@ -30,7 +30,7 @@ margin:0;background:var(--bg);color:var(--text);
 min-height:100vh;display:flex;justify-content:center;
 padding:16px;
 }
-.app{max-width:420px;width:100%}
+.app{width:100%;max-width:420px}
 .hidden{display:none}
 
 .logo{
@@ -50,11 +50,12 @@ margin-bottom:14px;
 }
 
 label{font-size:12px;color:var(--muted)}
-input,button{
+input,textarea,button{
 width:100%;padding:12px;margin-top:6px;
 border-radius:12px;border:1px solid var(--border);
 background:transparent;color:var(--text);
 }
+textarea{resize:none}
 button{
 background:var(--gradient);
 border:none;font-weight:700;color:#022c22;
@@ -73,9 +74,10 @@ z-index:10;
 background:var(--card);
 border:1px solid var(--border);
 border-radius:18px;
-padding:20px;
-text-align:center;
-width:90%;max-width:320px;
+padding:18px;
+width:92%;max-width:380px;
+max-height:90vh;
+overflow:auto;
 }
 </style>
 </head>
@@ -109,31 +111,63 @@ width:90%;max-width:320px;
 <div class="link" onclick="showLogin()">Voltar</div>
 </div>
 
-<!-- POPUP (SÓ APÓS LOGIN) -->
-<div id="welcomePopup" class="overlay hidden">
+<!-- POPUP PRIMEIRO LOGIN -->
+<div id="setupPopup" class="overlay hidden">
 <div class="popup">
-<h2 id="welcomeText"></h2>
-<p style="color:var(--muted)">Deseja personalizar o tema?</p>
-<button onclick="toggleTheme()">Alternar tema</button>
-<button onclick="continueApp()">Continuar</button>
+<h2>Personalizar App</h2>
+
+<label>Nome da dívida</label>
+<input id="dName">
+
+<label>Valor total</label>
+<input id="dTotal" type="number">
+
+<label>Nº de parcelas</label>
+<input id="dParc" type="number">
+
+<label>Valor da parcela</label>
+<input id="dParcValue" disabled>
+
+<label>Prazo (meses)</label>
+<input id="dPrazo" type="number">
+
+<label>Data do vencimento</label>
+<input id="dVenc" type="date">
+
+<label>Observações</label>
+<textarea id="dObs"></textarea>
+
+<button onclick="saveInitialDebt()">Salvar dívida</button>
+<button onclick="finishSetup()">Concluir</button>
 </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 <div class="card">
-<h2>Dashboard</h2>
+<h2 id="welcome"></h2>
 <canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<h2>Assistente Financeiro 🤖</h2>
+<input id="iaQuestion" placeholder="Ex: Vou conseguir pagar tudo?">
+<button onclick="askIA()">Perguntar</button>
+<div id="iaAnswer" style="margin-top:10px;color:var(--muted)"></div>
 </div>
 </div>
 
 </div>
 
 <script>
+/* ================= CONFIG OPENAI ================= */
+const OPENAI_API_KEY = "SUA_CHAVE_AQUI";
+
+/* ================= STATE ================= */
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let current = null;
 
-/* UI */
+/* ================= UI ================= */
 function showRegister(){
 loginCard.classList.add("hidden");
 registerCard.classList.remove("hidden");
@@ -143,65 +177,121 @@ registerCard.classList.add("hidden");
 loginCard.classList.remove("hidden");
 }
 
-/* AUTH */
+/* ================= AUTH ================= */
 function register(){
 if(!regName.value||!regUser.value||!regEmail.value||!regPass.value)
 return alert("Preencha tudo");
 
 if(users.find(u=>u.user===regUser.value||u.email===regEmail.value))
-return alert("Usuário ou email já existe");
+return alert("Usuário já existe");
 
 users.push({
 name:regName.value,
 user:regUser.value,
 email:regEmail.value,
 pass:regPass.value,
-theme:"dark"
+firstLogin:true,
+debts:[]
 });
-
 localStorage.setItem("users",JSON.stringify(users));
 alert("Conta criada!");
 showLogin();
 }
 
 function login(){
-const u = users.find(u =>
-(u.user===loginUser.value || u.email===loginUser.value) &&
+const u=users.find(u=>
+(u.user===loginUser.value||u.email===loginUser.value)&&
 u.pass===loginPass.value
 );
-if(!u) return alert("Login inválido");
+if(!u)return alert("Login inválido");
 
-current = u;
-
-/* GARANTIA ABSOLUTA */
+current=u;
 loginCard.classList.add("hidden");
 registerCard.classList.add("hidden");
-welcomeText.innerText = `Bem-vindo(a), ${u.name.split(" ")[0]}!`;
-welcomePopup.classList.remove("hidden");
+
+if(u.firstLogin){
+setupPopup.classList.remove("hidden");
+}else{
+openDashboard();
+}
 }
 
-/* POPUP */
-function toggleTheme(){
-current.theme = current.theme==="dark" ? "light" : "dark";
-document.body.classList.toggle("light", current.theme==="light");
+/* ================= SETUP ================= */
+dParc.oninput=()=>{
+dParcValue.value = dParc.value && dTotal.value
+? (dTotal.value / dParc.value).toFixed(2)
+: "";
+};
+
+function saveInitialDebt(){
+if(!dName.value||!dTotal.value||!dParc.value) return;
+
+current.debts.push({
+name:dName.value,
+total:+dTotal.value,
+parcelas:+dParc.value,
+parcela:+dParcValue.value,
+prazo:+dPrazo.value,
+vencimento:dVenc.value,
+obs:dObs.value
+});
 localStorage.setItem("users",JSON.stringify(users));
+alert("Dívida adicionada!");
 }
 
-function continueApp(){
-welcomePopup.classList.add("hidden");
+function finishSetup(){
+current.firstLogin=false;
+localStorage.setItem("users",JSON.stringify(users));
+setupPopup.classList.add("hidden");
+openDashboard();
+}
+
+/* ================= DASH ================= */
+function openDashboard(){
 dashboard.classList.remove("hidden");
+welcome.innerText=`Bem-vindo(a), ${current.name.split(" ")[0]}!`;
 renderChart();
 }
 
-/* DASH */
 function renderChart(){
+let total=0;
+current.debts.forEach(d=>total+=d.total);
 new Chart(chart,{
 type:"doughnut",
 data:{
-labels:["Organizado","Ajustar"],
-datasets:[{data:[70,30],backgroundColor:["#22c55e","#ef4444"]}]
+labels:["Dívidas"],
+datasets:[{data:[total],backgroundColor:["#22c55e"]}]
 }
 });
+}
+
+/* ================= IA OPENAI ================= */
+async function askIA(){
+iaAnswer.innerText="Analisando...";
+let total=0;
+current.debts.forEach(d=>total+=d.total);
+
+const prompt=`
+Usuário possui R$ ${total} em dívidas.
+Detalhes: ${JSON.stringify(current.debts)}.
+Pergunta: ${iaQuestion.value}
+Responda como consultor financeiro, claro e direto.
+`;
+
+const res=await fetch("https://api.openai.com/v1/chat/completions",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+OPENAI_API_KEY
+},
+body:JSON.stringify({
+model:"gpt-4o-mini",
+messages:[{role:"user",content:prompt}],
+temperature:0.4
+})
+});
+const data=await res.json();
+iaAnswer.innerText=data.choices?.[0]?.message?.content||"Erro ao responder";
 }
 </script>
 </body>
