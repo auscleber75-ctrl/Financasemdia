@@ -5,41 +5,120 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FINANÇAS EM DIA</title>
 
+<!-- FONTES -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 :root{
---bg:#020617;--card:#020617;--border:#1e293b;
---text:#e5e7eb;--muted:#94a3b8;
---green:#22c55e;--red:#ef4444;--blue:#38bdf8;
+--bg:#020617;
+--card:rgba(255,255,255,.03);
+--border:rgba(255,255,255,.08);
+--text:#e5e7eb;
+--muted:#94a3b8;
+--green:#22c55e;
+--red:#ef4444;
+--blue:#38bdf8;
+--gradient:linear-gradient(90deg,#22c55e,#38bdf8);
 }
+
 .light{
---bg:#f8fafc;--card:#fff;--border:#e2e8f0;
---text:#020617;--muted:#475569;
+--bg:#f8fafc;
+--card:#ffffff;
+--border:#e2e8f0;
+--text:#020617;
+--muted:#475569;
 }
-*{box-sizing:border-box;font-family:system-ui}
+
+*{box-sizing:border-box;font-family:Inter,sans-serif}
 body{margin:0;background:var(--bg);color:var(--text);padding:16px}
-.app{max-width:480px;margin:auto}
-.card{background:var(--card);border:1px solid var(--border);
-border-radius:16px;padding:14px;margin-bottom:14px}
-h1{text-align:center;background:linear-gradient(90deg,var(--green),var(--blue));
--webkit-background-clip:text;-webkit-text-fill-color:transparent}
-input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;
-border:1px solid var(--border);background:transparent;color:var(--text)}
-button{background:var(--green);border:none;font-weight:bold;color:#022c22}
-.link{color:var(--blue);text-align:center;margin-top:10px;cursor:pointer}
+.app{max-width:500px;margin:auto}
+
+/* LOGO */
+.logo{
+text-align:center;
+font-size:28px;
+font-weight:800;
+letter-spacing:3px;
+background:var(--gradient);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+margin-bottom:6px;
+}
+.logo span{
+display:block;
+font-size:11px;
+letter-spacing:4px;
+color:var(--muted);
+-webkit-text-fill-color:var(--muted);
+}
+
+/* CARDS */
+.card{
+background:var(--card);
+backdrop-filter:blur(14px);
+border:1px solid var(--border);
+border-radius:18px;
+padding:16px;
+margin-bottom:16px;
+}
+
+/* TEXT */
+h2{margin:0 0 8px;font-size:18px}
+small{color:var(--muted)}
+
+/* INPUTS */
+input,button{
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:12px;
+border:1px solid var(--border);
+background:transparent;
+color:var(--text);
+font-size:14px;
+}
+button{
+background:var(--gradient);
+border:none;
+font-weight:700;
+color:#022c22;
+}
+.link{text-align:center;color:var(--blue);margin-top:12px;cursor:pointer}
 .hidden{display:none}
-.actions{display:flex;gap:8px}
-.actions button{flex:1;background:var(--blue);color:#020617}
-.remove{background:var(--red)!important;color:#fff!important}
+
+/* DASH */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{
+background:rgba(0,0,0,.2);
+padding:12px;
+border-radius:14px;
+}
+.progress{
+height:10px;
+background:#1e293b;
+border-radius:999px;
+overflow:hidden;
+margin-top:6px;
+}
+.progress span{
+display:block;
+height:100%;
+background:var(--gradient);
+}
+
+/* LIST */
+.item{border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
 </style>
 </head>
 
 <body>
 <div class="app">
 
-<h1>FINANÇAS EM DIA</h1>
+<div class="logo">FINANÇAS EM DIA<span>CONTROLE • CLAREZA • FUTURO</span></div>
 
 <!-- LOGIN -->
 <div id="login" class="card">
+  <h2>Login</h2>
   <input id="loginUser" placeholder="Usuário ou Email">
   <input id="loginPass" type="password" placeholder="Senha">
   <button onclick="login()">Entrar</button>
@@ -48,6 +127,7 @@ button{background:var(--green);border:none;font-weight:bold;color:#022c22}
 
 <!-- CADASTRO -->
 <div id="register" class="card hidden">
+  <h2>Criar conta</h2>
   <input id="regName" placeholder="Nome completo">
   <input id="regUser" placeholder="Usuário">
   <input id="regEmail" placeholder="Email">
@@ -56,133 +136,137 @@ button{background:var(--green);border:none;font-weight:bold;color:#022c22}
   <input id="regPhone" placeholder="Telefone">
   <input id="regPass" type="password" placeholder="Senha">
   <button onclick="register()">Cadastrar</button>
-  <div class="link" onclick="showLogin()">Voltar ao login</div>
+  <div class="link" onclick="showLogin()">Voltar</div>
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden">
 
 <div class="card">
-  <strong id="welcome"></strong>
-  <button onclick="toggleTheme()">🎨 Personalizar app</button>
+  <h2 id="welcome"></h2>
+  <button onclick="toggleTheme()">🎨 Personalizar tema</button>
 </div>
 
-<!-- DÍVIDA -->
+<!-- DASHBOARD -->
 <div class="card">
-  <strong>Adicionar dívida</strong>
+  <h2>Dashboard</h2>
+  <div class="grid">
+    <div class="stat">Total Dívidas<br><strong>R$ <span id="total"></span></strong></div>
+    <div class="stat">Aporte Mensal<br><strong>R$ <span id="aporte"></span></strong></div>
+  </div>
+  <small>Progresso da meta</small>
+  <div class="progress"><span id="bar"></span></div>
+</div>
+
+<!-- META -->
+<div class="card">
+  <h2>Meta mensal</h2>
+  <input id="goal" type="number" placeholder="Valor da meta">
+  <button onclick="saveGoal()">Salvar meta</button>
+</div>
+
+<!-- DÍVIDAS -->
+<div class="card">
+  <h2>Adicionar dívida</h2>
   <input id="dName" placeholder="Descrição">
   <input id="dValue" type="number" placeholder="Valor">
   <input id="dDate" type="date">
-  <button onclick="addDebt()">Adicionar dívida</button>
+  <button onclick="addDebt()">Adicionar</button>
+  <div id="list"></div>
 </div>
-
-<!-- APORTE -->
-<div class="card">
-  <strong>Aporte mensal</strong>
-  <input id="aValue" type="number" placeholder="Valor mensal">
-  <button onclick="addAporte()">Salvar aporte</button>
-</div>
-
-<div id="list"></div>
 
 </div>
 </div>
 
 <script>
 let users=JSON.parse(localStorage.getItem("users"))||[];
-let currentUser=null;
+let current=null;
 
-function showRegister(){loginDiv.classList.add("hidden");registerDiv.classList.remove("hidden");}
-function showLogin(){registerDiv.classList.add("hidden");loginDiv.classList.remove("hidden");}
+/* VALIDACOES */
+const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function validCPF(cpf){
+cpf=cpf.replace(/\D/g,'');
+if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
+let s=0;for(let i=0;i<9;i++)s+=cpf[i]*(10-i);
+let d=11-(s%11);if(d>=10)d=0;
+if(d!=cpf[9])return false;
+s=0;for(let i=0;i<10;i++)s+=cpf[i]*(11-i);
+d=11-(s%11);if(d>=10)d=0;
+return d==cpf[10];
+}
 
+/* UI */
+function showRegister(){loginDiv.classList.add("hidden");registerDiv.classList.remove("hidden")}
+function showLogin(){registerDiv.classList.add("hidden");loginDiv.classList.remove("hidden")}
+
+/* AUTH */
 function register(){
-  const user={
-    name:regName.value,
-    username:regUser.value,
-    email:regEmail.value,
-    cpf:regCpf.value,
-    birth:regBirth.value,
-    phone:regPhone.value,
-    pass:regPass.value,
-    debts:[],
-    aporte:0,
-    theme:"dark"
-  };
-  users.push(user);
-  localStorage.setItem("users",JSON.stringify(users));
-  alert("Cadastro realizado!");
-  showLogin();
+if(!validEmail(regEmail.value))return alert("Email inválido");
+if(!validCPF(regCpf.value))return alert("CPF inválido");
+const u={
+name:regName.value,
+user:regUser.value,
+email:regEmail.value,
+pass:regPass.value,
+debts:[],
+aporte:0,
+goal:0,
+theme:"dark"
+};
+users.push(u);
+localStorage.setItem("users",JSON.stringify(users));
+alert("Conta criada!");
+showLogin();
 }
 
 function login(){
-  const u=users.find(u=>
-    (u.username===loginUser.value || u.email===loginUser.value)
-    && u.pass===loginPass.value
-  );
-  if(!u) return alert("Credenciais inválidas");
-  currentUser=u;
-  loginDiv.classList.add("hidden");
-  appDiv.classList.remove("hidden");
-  welcome.innerText=`Bem-vindo(a), ${u.name.split(" ")[0]}!`;
-  document.body.classList.toggle("light",u.theme==="light");
-  render();
+const u=users.find(u=>(u.user===loginUser.value||u.email===loginUser.value)&&u.pass===loginPass.value);
+if(!u)return alert("Login inválido");
+current=u;
+loginDiv.classList.add("hidden");
+appDiv.classList.remove("hidden");
+welcome.innerText=`Bem-vindo(a), ${u.name.split(" ")[0]}!`;
+document.body.classList.toggle("light",u.theme==="light");
+render();
 }
 
+/* APP */
 function toggleTheme(){
-  currentUser.theme=currentUser.theme==="dark"?"light":"dark";
-  document.body.classList.toggle("light",currentUser.theme==="light");
-  save();
+current.theme=current.theme==="dark"?"light":"dark";
+document.body.classList.toggle("light",current.theme==="light");
+save();
 }
 
-function save(){
-  localStorage.setItem("users",JSON.stringify(users));
-  render();
-}
+function save(){localStorage.setItem("users",JSON.stringify(users));render();}
+
+function saveGoal(){current.goal=+goal.value||0;save();}
 
 function addDebt(){
-  if(!dName.value||!dValue.value||!dDate.value)return;
-  currentUser.debts.push({name:dName.value,value:+dValue.value,date:dDate.value});
-  dName.value=dValue.value=dDate.value="";
-  save();
-}
-
-function addAporte(){
-  currentUser.aporte=+aValue.value||0;
-  save();
+current.debts.push({name:dName.value,value:+dValue.value,date:dDate.value});
+dName.value=dValue.value=dDate.value="";
+save();
 }
 
 function render(){
-  list.innerHTML="";
-  currentUser.debts.forEach((d,i)=>{
-    list.innerHTML+=`
-    <div class="card">
-      <strong>${d.name}</strong><br>
-      R$ ${d.value} - ${new Date(d.date).toLocaleDateString()}
-    </div>`;
-  });
+let total=0;
+list.innerHTML="";
+current.debts.forEach(d=>{
+total+=d.value;
+list.innerHTML+=`<div class="item"><strong>${d.name}</strong><br>R$ ${d.value} • ${new Date(d.date).toLocaleDateString()}</div>`;
+});
+totalEl.textContent=total.toFixed(2);
+aporteEl.textContent=current.aporte||0;
+bar.style.width=current.goal?`${Math.min((total/current.goal)*100,100)}%`:"0%";
 }
 
-const loginDiv=document.getElementById("login");
-const registerDiv=document.getElementById("register");
-const appDiv=document.getElementById("app");
-const welcome=document.getElementById("welcome");
-const list=document.getElementById("list");
-
-const regName=regNameInput=document.getElementById("regName");
-const regUser=document.getElementById("regUser");
-const regEmail=document.getElementById("regEmail");
-const regCpf=document.getElementById("regCpf");
-const regBirth=document.getElementById("regBirth");
-const regPhone=document.getElementById("regPhone");
-const regPass=document.getElementById("regPass");
-
-const loginUser=document.getElementById("loginUser");
-const loginPass=document.getElementById("loginPass");
-
-const dName=document.getElementById("dName");
-const dValue=document.getElementById("dValue");
-const dDate=document.getElementById("dDate");
-const aValue=document.getElementById("aValue");
+/* DOM */
+const loginDiv=login;
+const registerDiv=register;
+const appDiv=app;
+const welcome=welcome;
+const totalEl=total;
+const aporteEl=aporte;
+const bar=bar;
 </script>
 </body>
 </html>
