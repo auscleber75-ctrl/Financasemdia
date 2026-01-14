@@ -8,13 +8,22 @@
 <style>
 :root {
   --bg: #020617;
-  --card: #020617;
-  --border: #1e293b;
+  --card: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.08);
   --text: #e5e7eb;
+  --muted: #94a3b8;
   --green: #22c55e;
   --red: #ef4444;
   --yellow: #facc15;
-  --blue: #38bdf8;
+  --accent: #38bdf8;
+}
+
+.light {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #020617;
+  --muted: #475569;
 }
 
 * {
@@ -23,59 +32,92 @@
 }
 
 body {
+  margin: 0;
   background: var(--bg);
   color: var(--text);
-  margin: 0;
   padding: 16px;
+  transition: 0.3s;
 }
 
-h1 {
-  text-align: center;
-  color: var(--green);
-  margin-bottom: 16px;
-}
-
-.container {
+.app {
   max-width: 480px;
   margin: auto;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 12px;
+/* LOGO */
+.logo {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
+.subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+/* TOGGLE */
+.toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.toggle button {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: var(--text);
+}
+
+/* CARD */
+.card {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+/* INPUTS */
 input, button {
   width: 100%;
   padding: 12px;
   margin-top: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
-  font-size: 16px;
+  font-size: 15px;
 }
 
-button {
-  background: var(--green);
-  color: #022c22;
-  font-weight: bold;
+button.primary {
+  background: linear-gradient(90deg, var(--green), var(--accent));
   border: none;
+  font-weight: bold;
+  color: #020617;
 }
 
+/* DEBT */
 .debt {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .badge {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 20px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
   width: fit-content;
 }
 
@@ -86,12 +128,12 @@ button {
 .actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .actions button {
   flex: 1;
-  background: var(--blue);
+  background: var(--accent);
   color: #020617;
 }
 
@@ -108,17 +150,21 @@ button {
 </head>
 
 <body>
+<div class="app">
 
-<h1>FINANÇAS EM DIA</h1>
+  <div class="logo">FINANÇAS EM DIA</div>
+  <div class="subtitle">Controle simples. Vida financeira leve.</div>
 
-<div class="container">
+  <div class="toggle">
+    <button onclick="toggleTheme()">🌗 Alternar tema</button>
+  </div>
 
   <!-- ADD -->
   <div class="card">
     <input id="name" placeholder="Nome da dívida">
     <input id="value" type="number" placeholder="Valor (R$)">
     <input id="date" type="date">
-    <button onclick="addDebt()">Adicionar</button>
+    <button class="primary" onclick="addDebt()">Adicionar dívida</button>
   </div>
 
   <!-- LIST -->
@@ -128,6 +174,15 @@ button {
 
 <script>
 let debts = JSON.parse(localStorage.getItem("debts")) || [];
+let theme = localStorage.getItem("theme") || "dark";
+
+document.body.classList.toggle("light", theme === "light");
+
+function toggleTheme() {
+  theme = theme === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", theme);
+  document.body.classList.toggle("light", theme === "light");
+}
 
 function save() {
   localStorage.setItem("debts", JSON.stringify(debts));
@@ -135,17 +190,9 @@ function save() {
 }
 
 function addDebt() {
-  const name = nameInput.value;
-  const value = valueInput.value;
-  const date = dateInput.value;
-
-  if (!name || !value || !date) {
-    alert("Preencha todos os campos");
-    return;
-  }
-
-  debts.push({ name, value, date, paid: false });
-  nameInput.value = valueInput.value = dateInput.value = "";
+  if (!name.value || !value.value || !date.value) return;
+  debts.push({ name: name.value, value: value.value, date: date.value, paid: false });
+  name.value = value.value = date.value = "";
   save();
 }
 
@@ -159,13 +206,9 @@ function removeDebt(i) {
   save();
 }
 
-function status(debt) {
-  if (debt.paid) return "paid";
-
-  const today = new Date();
-  const due = new Date(debt.date);
-  const diff = (due - today) / (1000 * 60 * 60 * 24);
-
+function status(d) {
+  if (d.paid) return "paid";
+  const diff = (new Date(d.date) - new Date()) / 86400000;
   if (diff < 0) return "late";
   if (diff <= 3) return "warning";
   return "";
@@ -173,18 +216,14 @@ function status(debt) {
 
 function render() {
   list.innerHTML = "";
-
   debts.forEach((d, i) => {
     const s = status(d);
-
     list.innerHTML += `
       <div class="card debt ${d.paid ? "line" : ""}">
         <strong>${d.name}</strong>
         <span>R$ ${d.value}</span>
-        <span>Vencimento: ${new Date(d.date).toLocaleDateString()}</span>
-        ${s ? `<span class="badge ${s}">
-          ${s === "paid" ? "PAGA" : s === "late" ? "ATRASADA" : "VENCE EM BREVE"}
-        </span>` : ""}
+        <span>Vence em ${new Date(d.date).toLocaleDateString()}</span>
+        ${s ? `<span class="badge ${s}">${s === "paid" ? "PAGA" : s === "late" ? "ATRASADA" : "EM BREVE"}</span>` : ""}
         <div class="actions">
           <button onclick="togglePaid(${i})">${d.paid ? "Desfazer" : "Pagar"}</button>
           <button class="remove" onclick="removeDebt(${i})">Remover</button>
@@ -194,13 +233,12 @@ function render() {
   });
 }
 
-const nameInput = document.getElementById("name");
-const valueInput = document.getElementById("value");
-const dateInput = document.getElementById("date");
+const name = document.getElementById("name");
+const value = document.getElementById("value");
+const date = document.getElementById("date");
 const list = document.getElementById("list");
 
 render();
 </script>
-
 </body>
 </html>
